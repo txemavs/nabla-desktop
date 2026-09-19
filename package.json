@@ -1,0 +1,62 @@
+{
+  "name": "@nabla/desktop",
+  "version": "0.0.1",
+  "description": "Reusable 2D window shell for Nabla apps",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "vite build",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "peerDependencies": {
+    "pinia": "^2.1.0",
+    "vue": "^3.3.0"
+  },
+  "peerDependenciesMeta": {
+    "vuetify": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/test-utils": "^2.4.4",
+    "typescript": "^5.4.3",
+    "vite": "^5.2.8",
+    "vite-plugin-dts": "^3.8.1",
+    "vitest": "^1.4.0",
+    "vue": "^3.4.21",
+    "vue-tsc": "^2.0.7",
+    "pinia": "^2.1.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/txemavs/nabla-desktop.git"
+  },
+  "keywords": [
+    "vue",
+    "desktop",
+    "window-manager",
+    "nabla"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/txemavs/nabla-desktop/issues"
+  },
+  "homepage": "https://github.com/txemavs/nabla-desktop#readme"
+}
