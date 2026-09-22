@@ -36,3 +36,8 @@ close-guard tests. `test:workspace` exercises real tab drag/drop, keyboard split
 and floating movement, native canvas identity, retained documents, dialog dismissal
 and compact bounds. Both packed dependency profiles now mount WorkspaceHost with
 Vue document and native canvas content and round-trip an injected layout adapter.
+
+Phase 4 adds `test:detached` (included in `test:demo`) for same-origin browser-window
+synchronization, blocked popups, owner/child reload, snapshot isolation, stale actions
+and cleanup on renderer failure. Both packed profiles also open a synchronized child
+inspector through the public core export.

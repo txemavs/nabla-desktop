@@ -120,7 +120,7 @@ Set `background` explicitly to retain phase 1's world-behind-tools arrangement.
 
 Browser requirements include ResizeObserver and the HTML Popover API. Chromium is
 exercised automatically; Firefox/Safari and assistive technology combinations are
-not certified by this test suite. No legacy popover polyfill is bundled. Tabs,
-splits/docking, layout persistence, modal ownership and browser-window transfer
-remain later roadmap work. API is pre-1.0; document migrations with changes rather
+not certified by this test suite. No legacy popover polyfill is bundled. Tabs, splits/docking, layout persistence and dialogs are documented in
+[phase 3](phase-three.md); the optional browser-view adapter is documented in
+[phase 4](phase-four.md). API is pre-1.0; document migrations with changes rather
 than promising frozen contracts before both production consumers adopt them.
