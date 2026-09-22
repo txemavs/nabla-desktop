@@ -1,6 +1,6 @@
 {
   "name": "@nabla/desktop",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Reusable 2D window shell for Nabla apps",
   "type": "module",
   "main": "./dist/index.cjs",
