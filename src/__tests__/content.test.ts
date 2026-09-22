@@ -1,6 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest'
 import { mountExternalContent } from '../core'
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 it('resizes only visible content and releases resources exactly once', () => {
   const disconnect = vi.fn()
   let changed!: () => void
