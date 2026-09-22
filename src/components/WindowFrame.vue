@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useWindowDrag } from '../composables/useWindowDrag'
-import { useWindowsStore } from '../stores/windows'
+import { useWindowsStore, type WindowsStore } from '../stores/windows'
 
 const props = withDefaults(
   defineProps<{
+    store?: WindowsStore
     windowId: string
     title?: string
     icon?: string
@@ -28,14 +29,11 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const windowsStore = useWindowsStore()
+const windowsStore = props.store ?? useWindowsStore()
 const bodyRef = ref<HTMLElement | null>(null)
-const viewport = ref({ w: 1280, h: 800 })
+const frameRef = ref<HTMLElement | null>(null)
 const motionReady = ref(false)
 
-const MIN_WIDTH = 200
-const MIN_HEIGHT = 120
-const FRAME_INSET = 12
 const OPEN_Z = 100
 
 const state = computed(() => windowsStore.windows.get(props.windowId))
@@ -51,23 +49,35 @@ const visible = computed(() => {
   return true
 })
 
+watch(
+  isActive,
+  () => {
+    void nextTick(() => {
+      if (isActive.value && visible.value && !frameRef.value?.contains(document.activeElement))
+        bodyRef.value?.focus({ preventScroll: true })
+    })
+  },
+  { immediate: true, flush: 'post' },
+)
+
 const frameClass = computed(() => ({
   'window-frame--active': isActive.value,
   'window-frame--maximized': fillViewport.value,
-  'window-frame--motion': motionReady.value && !state.value?.introducing,
+  'window-frame--motion': motionReady.value && !state.value?.introducing && !interacting.value,
 }))
 
 const frameStyle = computed(() => {
   const w = state.value
   if (!w) return {}
   if (fillViewport.value) {
-    const top = windowsStore.dockBottom
+    const { width, height, insets } = windowsStore.bounds
+    const top = insets.top
     return {
       top: `${top}px`,
-      left: '0',
-      width: `${viewport.value.w}px`,
-      height: `${Math.max(80, viewport.value.h - top)}px`,
-      zIndex: OPEN_Z + w.zIndex,
+      left: `${insets.left}px`,
+      width: `${Math.max(1, width - insets.left - insets.right)}px`,
+      height: `${Math.max(1, height - top - insets.bottom)}px`,
+      zIndex: windowsStore.maximizePolicy === 'background' ? 1 : OPEN_Z + w.zIndex,
       transform: 'none',
     }
   }
@@ -80,57 +90,41 @@ const frameStyle = computed(() => {
   }
 })
 
-function measureViewport() {
-  if (typeof window === 'undefined') return
-  viewport.value = { w: window.innerWidth, h: window.innerHeight }
-}
-
+let resizeCleanup: (() => void) | undefined
+const interacting = ref(false)
+let motionFrame = 0
 onMounted(() => {
-  measureViewport()
-  if (typeof window !== 'undefined') {
-    window.addEventListener('resize', measureViewport)
-  }
-  requestAnimationFrame(() => {
+  motionFrame = requestAnimationFrame(() => {
     motionReady.value = true
   })
 })
-
 onBeforeUnmount(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('resize', measureViewport)
-  }
+  cancelAnimationFrame(motionFrame)
+  resizeCleanup?.()
 })
-
-function chromeViewport() {
-  return {
-    left: FRAME_INSET,
-    top: windowsStore.dockBottom,
-    width: Math.max(80, viewport.value.w - FRAME_INSET * 2),
-    height: Math.max(80, viewport.value.h - windowsStore.dockBottom - FRAME_INSET),
-  }
-}
-
 function clampGeometry(x: number, y: number, width: number, height: number) {
-  const vp = chromeViewport()
-  const w = Math.max(MIN_WIDTH, Math.min(width, vp.width))
-  const h = Math.max(MIN_HEIGHT, Math.min(height, vp.height))
-  const cx = Math.max(vp.left, Math.min(x, vp.left + vp.width - w))
-  const cy = Math.max(vp.top, Math.min(y, vp.top + vp.height - h))
-  return { x: cx, y: cy, width: w, height: h }
+  return windowsStore.fitGeometry({ x, y, width, height })
 }
 
 function onFramePointerDown() {
   windowsStore.focusWindow(props.windowId)
 }
 
-const { onPointerDown: onTitleDrag } = useWindowDrag((dx, dy) => {
-  const w = state.value
-  if (!w || w.maximized || props.noMove) return
-  const next = clampGeometry(w.x + dx, w.y + dy, w.width, w.height)
-  windowsStore.updateGeometry(props.windowId, next)
-})
+const { onPointerDown: onTitleDrag } = useWindowDrag(
+  (dx, dy) => {
+    const w = state.value
+    if (!w || w.maximized || props.noMove) return
+    const next = clampGeometry(w.x + dx, w.y + dy, w.width, w.height)
+    windowsStore.updateGeometry(props.windowId, next)
+  },
+  () => {
+    interacting.value = false
+  },
+)
 
 function onTitlePointerDown(e: PointerEvent) {
+  if (e.button !== 0 || props.noMove || state.value?.maximized) return
+  interacting.value = true
   onTitleDrag(e)
 }
 
@@ -149,7 +143,9 @@ function focusBody() {
 type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
 function onResizePointerDown(edge: ResizeEdge, e: PointerEvent) {
-  if (props.noResize || fillViewport.value) return
+  if (e.button !== 0 || props.noResize || fillViewport.value) return
+  resizeCleanup?.()
+  interacting.value = true
   e.stopPropagation()
   windowsStore.focusWindow(props.windowId)
 
@@ -163,6 +159,7 @@ function onResizePointerDown(edge: ResizeEdge, e: PointerEvent) {
   el.setPointerCapture(e.pointerId)
 
   function onMove(ev: PointerEvent) {
+    if (ev.pointerId !== e.pointerId) return
     const dx = ev.clientX - startX
     const dy = ev.clientY - startY
     let { x, y, width, height } = origin
@@ -178,17 +175,28 @@ function onResizePointerDown(edge: ResizeEdge, e: PointerEvent) {
       y = origin.y + dy
     }
 
-    const next = clampGeometry(x, y, width, height)
+    const sized = clampGeometry(origin.x, origin.y, width, height)
+    if (edge.includes('w')) x = origin.x + origin.width - sized.width
+    if (edge.includes('n')) y = origin.y + origin.height - sized.height
+    const next = clampGeometry(x, y, sized.width, sized.height)
     windowsStore.updateGeometry(props.windowId, next)
   }
 
   function onUp(ev: PointerEvent) {
-    el.releasePointerCapture(ev.pointerId)
+    if (ev.pointerId !== e.pointerId) return
+    if (el.hasPointerCapture(ev.pointerId)) el.releasePointerCapture(ev.pointerId)
+    resizeCleanup?.()
+  }
+
+  resizeCleanup = () => {
     el.removeEventListener('pointermove', onMove)
     el.removeEventListener('pointerup', onUp)
     el.removeEventListener('pointercancel', onUp)
+    el.removeEventListener('lostpointercapture', onUp)
+    resizeCleanup = undefined
+    interacting.value = false
   }
-
+  el.addEventListener('lostpointercapture', onUp)
   el.addEventListener('pointermove', onMove)
   el.addEventListener('pointerup', onUp)
   el.addEventListener('pointercancel', onUp)
@@ -210,12 +218,16 @@ function onClose() {
 
 <template>
   <div
+    ref="frameRef"
     v-show="visible"
     class="window-frame"
     :data-window-id="windowId"
     :class="frameClass"
     :style="frameStyle"
     @pointerdown="onFramePointerDown"
+    @focusin="windowsStore.activeWindowId !== windowId && onFramePointerDown()"
+    role="region"
+    :aria-label="title"
   >
     <header
       class="window-frame__header"
@@ -257,17 +269,13 @@ function onClose() {
       </div>
     </header>
 
-    <div
-      ref="bodyRef"
-      class="window-frame__body"
-      tabindex="-1"
-    >
+    <div ref="bodyRef" class="window-frame__body" tabindex="-1">
       <slot />
     </div>
 
     <template v-if="!noResize && !fillViewport">
       <div
-        v-for="edge in (['n','s','e','w','ne','nw','se','sw'] as ResizeEdge[])"
+        v-for="edge in ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'] as ResizeEdge[]"
         :key="edge"
         class="window-frame__resize-handle"
         :class="`window-frame__resize-handle--${edge}`"
@@ -279,7 +287,8 @@ function onClose() {
 
 <style scoped>
 .window-frame {
-  position: fixed;
+  box-sizing: border-box;
+  position: absolute;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -291,7 +300,13 @@ function onClose() {
     0 14px 28px rgba(0, 0, 0, 0.25),
     0 10px 10px rgba(0, 0, 0, 0.22);
   pointer-events: auto;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 .window-frame--maximized {
@@ -321,6 +336,7 @@ function onClose() {
 }
 
 .window-frame__header {
+  touch-action: none;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -401,6 +417,7 @@ function onClose() {
 }
 
 .window-frame__resize-handle {
+  touch-action: none;
   position: absolute;
   z-index: 2;
 }
@@ -413,8 +430,12 @@ function onClose() {
   cursor: ns-resize;
 }
 
-.window-frame__resize-handle--n { top: -3px; }
-.window-frame__resize-handle--s { bottom: -3px; }
+.window-frame__resize-handle--n {
+  top: -3px;
+}
+.window-frame__resize-handle--s {
+  bottom: -3px;
+}
 
 .window-frame__resize-handle--e,
 .window-frame__resize-handle--w {
@@ -424,8 +445,12 @@ function onClose() {
   cursor: ew-resize;
 }
 
-.window-frame__resize-handle--e { right: -3px; }
-.window-frame__resize-handle--w { left: -3px; }
+.window-frame__resize-handle--e {
+  right: -3px;
+}
+.window-frame__resize-handle--w {
+  left: -3px;
+}
 
 .window-frame__resize-handle--ne,
 .window-frame__resize-handle--nw,
@@ -435,8 +460,24 @@ function onClose() {
   height: 12px;
 }
 
-.window-frame__resize-handle--ne { top: -3px; right: -3px; cursor: nesw-resize; }
-.window-frame__resize-handle--nw { top: -3px; left: -3px; cursor: nwse-resize; }
-.window-frame__resize-handle--se { bottom: -3px; right: -3px; cursor: nwse-resize; }
-.window-frame__resize-handle--sw { bottom: -3px; left: -3px; cursor: nesw-resize; }
+.window-frame__resize-handle--ne {
+  top: -3px;
+  right: -3px;
+  cursor: nesw-resize;
+}
+.window-frame__resize-handle--nw {
+  top: -3px;
+  left: -3px;
+  cursor: nwse-resize;
+}
+.window-frame__resize-handle--se {
+  bottom: -3px;
+  right: -3px;
+  cursor: nwse-resize;
+}
+.window-frame__resize-handle--sw {
+  bottom: -3px;
+  left: -3px;
+  cursor: nesw-resize;
+}
 </style>

@@ -1,10 +1,16 @@
 export const VERSION = '0.1.0'
 
 // Types
-export type { WindowState, WindowOptions } from './types'
+export type {
+  WindowState,
+  WindowOptions,
+  DesktopInsets,
+  DesktopBounds,
+  MaximizePolicy,
+} from './types'
 
 // Store
-export { useWindowsStore, WINDOW_INTRO_MS } from './stores/windows'
+export { useWindowsStore, defineWindowsStore, WINDOW_INTRO_MS } from './stores/windows'
 export type { WindowsStore } from './stores/windows'
 
 // Composables

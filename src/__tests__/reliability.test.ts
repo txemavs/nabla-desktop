@@ -1,0 +1,100 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { defineWindowsStore, useWindowsStore, WINDOW_INTRO_MS } from '../index'
+
+beforeEach(() => {
+  vi.useFakeTimers()
+  setActivePinia(createPinia())
+})
+afterEach(() => {
+  vi.clearAllTimers()
+  vi.useRealTimers()
+})
+const ready = () => vi.advanceTimersByTime(WINDOW_INTRO_MS + 1)
+it('never activates missing, closed or minimized windows through lifecycle operations', () => {
+  const s = useWindowsStore()
+  s.register('a')
+  s.register('b', { minimized: true })
+  ready()
+  s.openWindow('missing')
+  expect(s.activeWindowId).toBe('a')
+  s.setActiveWindow('b')
+  expect(s.activeWindowId).toBeNull()
+  s.focusWindow('a')
+  s.unregister('a')
+  expect(s.activeWindowId).toBeNull()
+  s.closeWindow('b')
+  s.restoreWindow('b')
+  expect(s.activeWindowId).toBeNull()
+})
+it('enforces one maximized window during registration and preserves floating tools', () => {
+  const s = useWindowsStore()
+  s.register('world', { maximized: true })
+  s.register('other', { maximized: true })
+  expect([...s.windows.values()].filter((w) => w.maximized).map((w) => w.id)).toEqual(['other'])
+  s.register('tool')
+  ready()
+  s.focusWindow('tool')
+  expect(s.windows.get('other')!.maximized).toBe(true)
+  s.setMaximizePolicy('exclusive')
+  s.focusWindow('tool')
+  expect(s.windows.get('other')!.maximized).toBe(false)
+})
+it('isolates counters, focus and clearing across desktops within one Pinia', () => {
+  const a = defineWindowsStore('left')(),
+    b = defineWindowsStore('right')()
+  const first = a.register('same', { minimized: true })
+  expect(b.register('same', { minimized: true }).x).toBe(first.x)
+  const second = b.register('second', { minimized: true })
+  a.clear()
+  expect(b.register('third', { minimized: true }).zIndex).toBeGreaterThan(second.zIndex)
+  b.focusWindow('same')
+  expect(a.activeWindowId).toBeNull()
+})
+it('keeps geometry in a shrinking host, including hosts smaller than window minimums', () => {
+  const s = useWindowsStore()
+  s.register('a', { x: 900, y: 700, width: 600, height: 400 })
+  s.setBounds(500, 300, { top: 30, left: 10, right: 10, bottom: 10 })
+  const w = s.windows.get('a')!
+  expect([w.x, w.y, w.width, w.height]).toEqual([10, 30, 480, 260])
+  s.updateGeometry('a', { x: Infinity, width: NaN, y: -200 })
+  expect(w.y).toBe(30)
+  expect(w.width).toBe(480)
+  s.setBounds(100, 80)
+  expect([w.x, w.y, w.width, w.height]).toEqual([0, 0, 100, 80])
+})
+it('distinguishes reusable registrations, kept content and disposable windows', () => {
+  const s = useWindowsStore()
+  s.register('persistent', { keepAlive: true, open: false })
+  expect(s.windows.get('persistent')!.hasOpened).toBe(false)
+  s.openWindow('persistent')
+  ready()
+  s.closeWindow('persistent')
+  expect(s.windows.get('persistent')).toMatchObject({
+    open: false,
+    hasOpened: true,
+    keepAlive: true,
+  })
+  s.register('ephemeral', { closeBehavior: 'dispose' })
+  s.closeWindow('ephemeral')
+  ready()
+  expect(s.windows.has('ephemeral')).toBe(false)
+  expect(s.activeWindowId).toBeNull()
+})
+it('does not steal focus when minimizing an inactive window', () => {
+  const s = useWindowsStore()
+  s.register('a')
+  s.register('b')
+  ready()
+  s.focusWindow('a')
+  s.minimizeWindow('b')
+  expect(s.activeWindowId).toBe('a')
+})
+it('cancels pending introductions on store disposal', () => {
+  const s = useWindowsStore()
+  s.register('pending')
+  s.$dispose()
+  ready()
+  expect(s.activeWindowId).toBeNull()
+  expect(s.windows.get('pending')!.introducing).toBe(false)
+})
