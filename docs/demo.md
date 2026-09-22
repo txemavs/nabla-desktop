@@ -34,9 +34,20 @@ types and uses native DOM/canvas APIs; the notes view is a Vue consumer.
 Use Archivo/Ver, the toolbar or shortcuts to execute shared commands. Right-click
 the workspace for its context menu. Menus support arrows, Enter and Escape.
 Typing `g` in Notes does not toggle the grid; pressing it with workspace focus
-does. Select the light theme to exercise inherited tokens. Tabs are still deferred.
+does. Select the light theme to exercise inherited tokens. The workspace lab below adds tabs and docking.
 
 `npm run test:demo` builds the app, checks its Vue/TypeScript code and runs Chromium
 checks for linked controls, note retention, minimization, disposable windows,
 container resizing and reset. It requires Playwright Chromium (`npx playwright
 install chromium`). Set `DEMO_SCREENSHOT` to save an optional desktop screenshot.
+
+## Workspace lab (phase 3)
+
+Choose **Probar paneles y pestañas** in the header. Tabs can be split, floated,
+reordered or dragged into another group. The Move/Resize controls also accept arrow
+keys. Edit the document, attempt to close it and exercise the confirmation dialog.
+Save a layout, rearrange it and restore it. Only layout is saved in browser storage;
+notes and scene settings are not persisted. Try **Solo mundo** and **Espacio pequeño**.
+The native canvas retains its DOM identity through all layout changes.
+
+`npm run test:demo` now also runs `test:workspace`, exercising these workflows.

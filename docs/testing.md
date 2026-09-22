@@ -30,3 +30,9 @@ Phase 2 adds core command availability/concurrency/modifier tests and external-c
 lifecycle cleanup tests. The demo browser suite covers foreground maximization,
 shared menu/toolbar/shortcut state, text-input isolation, nested/context menus and
 theme switching. Packaged consumer type checks include the core and new UI exports.
+
+Phase 3 adds workspace invariant, version validation, migration/storage and async
+close-guard tests. `test:workspace` exercises real tab drag/drop, keyboard splitting
+and floating movement, native canvas identity, retained documents, dialog dismissal
+and compact bounds. Both packed dependency profiles now mount WorkspaceHost with
+Vue document and native canvas content and round-trip an injected layout adapter.

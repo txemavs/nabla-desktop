@@ -12,6 +12,8 @@ import {
 } from '@nabla/desktop'
 import World from './World.vue'
 import Notes from './Notes.vue'
+import WorkspaceLab from './WorkspaceLab.vue'
+const workspaceMode = ref(false)
 const desktop = useWindowsStore()
 const shell = ref<HTMLElement | null>(null)
 const theme = ref('dark')
@@ -160,10 +162,12 @@ function menuStart() {
   <div ref="shell" class="lab" :class="{ 'light-theme': theme === 'light' }" tabindex="-1">
     <header class="topbar">
       <a class="brand" href="./"><span>▽</span> Nabla <b>Desktop</b></a
-      ><span class="pill">Laboratorio · Fase 2</span
+      ><span class="pill">Laboratorio · Fase 3</span
+      ><button class="reset" @click="workspaceMode = !workspaceMode">
+        {{ workspaceMode ? 'Ventanas y menús' : 'Probar paneles y pestañas' }}</button
       ><button class="reset" @click="reset">Reiniciar demo</button>
     </header>
-    <div class="demo-menubar">
+    <div v-show="!workspaceMode" class="demo-menubar">
       <MenuBar
         :registry="commands"
         :menus="menus"
@@ -177,7 +181,7 @@ function menuStart() {
         label="Herramientas"
       />
     </div>
-    <div class="layout">
+    <div v-show="!workspaceMode" class="layout">
       <aside class="sidebar">
         <p class="eyebrow">ABRE Y PRUEBA</p>
         <h1>Tu espacio<br />de trabajo.</h1>
@@ -243,7 +247,7 @@ function menuStart() {
                 :color="color"
                 :height="height"
                 :grid="grid"
-                :active="win.open && !win.minimized"
+                :active="win.open && !win.minimized && !workspaceMode"
                 :focused="desktop.activeWindowId === win.id"
                 @select="open('properties')"
               />
@@ -302,9 +306,14 @@ function menuStart() {
         </section>
       </main>
     </div>
+    <WorkspaceLab v-show="workspaceMode" :shown="workspaceMode" />
     <footer>
       Arrastra · Redimensiona · Minimiza · Reabre
-      <span>Estado local de esta sesión. No se guarda al recargar.</span>
+      <span>{{
+        workspaceMode
+          ? 'Guarda la distribución con el botón superior. El contenido no se guarda.'
+          : 'Estado local de esta sesión. No se guarda al recargar.'
+      }}</span>
     </footer>
   </div>
 </template>

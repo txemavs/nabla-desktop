@@ -34,7 +34,8 @@
     "dev:demo": "npm run build && vite --config vite.demo.config.ts --host 127.0.0.1",
     "build:demo": "npm run build && vite build --config vite.demo.config.ts",
     "typecheck:demo": "vue-tsc --noEmit -p tsconfig.demo.json",
-    "test:demo": "npm run build:demo && npm run typecheck:demo && node scripts/test-demo.mjs"
+    "test:demo": "npm run build:demo && npm run typecheck:demo && node scripts/test-demo.mjs && npm run test:workspace",
+    "test:workspace": "node scripts/test-workspace.mjs"
   },
   "peerDependencies": {
     "pinia": "^2.1.0 || ^4.0.3",

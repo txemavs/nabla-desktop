@@ -8,3 +8,18 @@ export type {
 } from './core/commands'
 export { mountExternalContent } from './core/content'
 export type { ContentFactory, MountedContent, ContentState } from './core/content'
+export { createWorkspace, validateWorkspace, measureWorkspace } from './core/workspace'
+export type {
+  Workspace,
+  WorkspaceSnapshot,
+  LayoutNode,
+  LayoutSplit,
+  TabGroup,
+  FloatingGroup,
+  LayoutRect,
+  LayoutStorage,
+  DockPosition,
+  PanelDefinition,
+  PlacedGroup,
+  PlacedDivider,
+} from './core/workspace'
