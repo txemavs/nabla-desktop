@@ -1,287 +1,141 @@
 # @nabla/desktop
 
-A reusable Vue 3 + Pinia library for building OS-like floating window systems. Provides a complete MDI (Multiple Document Interface) window manager with open/close/minimize/maximize/restore/focus/z-order/geometry/cascade operations.
+A Vue 3 window shell for Agency, Nabla Studio and other applications. The package
+provides floating windows, container-relative layout, focus and stacking,
+maximization policies, drag/resize and explicit content lifetime options.
 
-Use this library to add desktop-style windows to any website or web app — no specific UI framework required beyond Vue 3.
-
-## Features
-
-- **Window lifecycle**: open, close, minimize, maximize, restore
-- **Z-order management**: automatic stacking, bring-to-front on focus
-- **Cascade placement**: new windows offset like classic desktop OS
-- **Drag & resize**: title bar drag, 8-way edge/corner resize handles
-- **Single-maximized rule**: only one window can be maximized at a time
-- **Ephemeral vs persistent**: close can remove or just hide windows
-- **Intro animation**: optional shelf-to-float entrance effect
-- **Accessible**: keyboard support, reduced-motion support
-- **Neutral styling**: dark theme by default, easy to customize with CSS
+This is **phase 1** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
+Menus, tabs, docking, persistence, framework-independent content adapters and
+separate browser windows are not implemented yet. Application state, rendering
+and business logic remain outside Desktop.
 
 ## Installation
 
-```bash
-npm install @nabla/desktop
-# or
-pnpm add @nabla/desktop
-# or
-yarn add @nabla/desktop
-```
-
-## Peer Dependencies
-
-- `vue` ^3.3.0
-- `pinia` ^2.1.0
-
-## Quick Start
-
-### 1. Set up Pinia (if not already done)
+Install the package and its Vue/Pinia peers using your package manager. When using
+a development build, install the `.tgz` produced by `npm pack`; the examples below
+refer to the package name, not repository source paths.
 
 ```ts
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import App from './App.vue'
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import App from "./App.vue";
+import "@nabla/desktop/style.css"; // required, explicit public stylesheet export
 
-const app = createApp(App)
-app.use(createPinia())
-app.mount('#app')
+createApp(App).use(createPinia()).mount("#app");
 ```
 
-### 2. Register and render windows
+The peer range supports Vue `^3.3.0` and Pinia `^2.1.0 || ^4.0.3`. Automated packed
+consumer tests verify these exact combinations:
+
+| Profile | Vue    | Pinia | Host UI framework |
+| ------- | ------ | ----- | ----------------- |
+| Minimal | 3.4.21 | 2.1.7 | None              |
+| Agency  | 3.5.41 | 4.0.3 | Vuetify 4.1.10    |
+
+Vuetify is not a Desktop dependency. Pinia 3 is not declared supported; other
+versions within the peer ranges are not individually certified by this matrix.
+
+## Quick start
 
 ```vue
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useWindowsStore, WindowHost } from '@nabla/desktop'
+import { WindowHost, useWindowsStore } from "@nabla/desktop";
 
-const windowsStore = useWindowsStore()
-
-onMounted(() => {
-  windowsStore.register('editor', {
-    title: 'Code Editor',
-    icon: '📝',
-    width: 800,
-    height: 600,
-  })
-
-  windowsStore.register('terminal', {
-    title: 'Terminal',
-    icon: '⌨️',
-    width: 600,
-    height: 400,
-  })
-})
-
-function openNewWindow() {
-  const id = `window-${Date.now()}`
-  windowsStore.register(id, {
-    title: 'New Window',
-    width: 400,
-    height: 300,
-  })
-}
+const desktop = useWindowsStore();
+desktop.register("world", {
+  title: "World",
+  maximized: true,
+  keepAlive: true,
+});
+desktop.register("properties", {
+  title: "Properties",
+  x: 40,
+  y: 60,
+  width: 300,
+  height: 400,
+});
 </script>
 
 <template>
-  <div class="desktop">
-    <button @click="openNewWindow">New Window</button>
-
-    <WindowHost v-slot="{ window }">
-      <div class="window-content">
-        <p>Content for: {{ window.title }}</p>
-      </div>
+  <div class="workspace">
+    <WindowHost :store="desktop" :insets="{ top: 0 }" v-slot="{ window }">
+      <div v-if="window.id === 'world'">Your world component</div>
+      <div v-else>Your tools component</div>
     </WindowHost>
   </div>
 </template>
 
 <style>
-.desktop {
-  width: 100vw;
-  height: 100vh;
-  background: #121212;
-}
-
-.window-content {
-  padding: 16px;
-  color: #fff;
+.workspace {
+  width: 100%;
+  height: 600px;
+  min-height: 0;
 }
 </style>
 ```
 
-### 3. Or use WindowFrame directly for more control
+The parent must have a definite height. The default host occupies its **container**,
+not the browser viewport. A `ResizeObserver` updates bounds when the container
+changes size. Use `mode="viewport"` for the old full-browser placement and pass
+`insets` to reserve space for the host application's menus or dock.
 
-```vue
-<script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useWindowsStore, WindowFrame } from '@nabla/desktop'
+By default, the maximized window stays in a background layer and floating tools
+remain above it. Use `desktop.setMaximizePolicy('exclusive')` to restore the older
+policy in which focusing a floating window restores the maximized one.
 
-const windowsStore = useWindowsStore()
+## Independent desktops
 
-onMounted(() => {
-  windowsStore.register('my-window', {
-    title: 'My App',
-    width: 600,
-    height: 400,
-  })
-})
-
-function handleClose() {
-  windowsStore.closeWindow('my-window')
-}
-</script>
-
-<template>
-  <WindowFrame
-    window-id="my-window"
-    title="My App"
-    icon="🚀"
-    @close="handleClose"
-  >
-    <div class="app-content">
-      <h1>Hello from the window!</h1>
-    </div>
-  </WindowFrame>
-</template>
-```
-
-## API Reference
-
-### Types
+Define one store factory per workspace identity, outside component setup:
 
 ```ts
-interface WindowState {
-  id: string
-  title: string
-  icon?: string
-  x: number
-  y: number
-  width: number
-  height: number
-  minimized: boolean
-  maximized: boolean
-  open: boolean
-  zIndex: number
-  introducing?: boolean
-}
-
-interface WindowOptions {
-  title?: string
-  icon?: string
-  x?: number
-  y?: number
-  width?: number
-  height?: number
-  open?: boolean
-  minimized?: boolean
-  maximized?: boolean
-}
+import { defineWindowsStore } from "@nabla/desktop";
+export const useStudioDesktop = defineWindowsStore("studio-desktop");
+export const useAgencyDesktop = defineWindowsStore("agency-desktop");
 ```
 
-### Store: `useWindowsStore()`
+Each factory follows Pinia's identity rules. Different IDs give isolated desktops
+within the same Pinia. The same factory in different Pinia instances is also
+isolated. Use the same ID only when you deliberately want the same desktop.
+Pass the store to `WindowHost`; it forwards the same instance to every frame.
+Do not mount multiple hosts with different bounds for the same store.
 
-```ts
-const store = useWindowsStore()
+## Content lifetime
 
-// State
-store.windows          // Map<string, WindowState>
-store.activeWindowId   // string | null
-store.dockBottom       // number (viewport offset for maximized windows)
+| Action/option                          | Registration | Mounted content in WindowHost     |
+| -------------------------------------- | ------------ | --------------------------------- |
+| Minimize                               | Retained     | Retained, hidden                  |
+| Close, default `closeBehavior: 'hide'` | Retained     | Unmounted by default              |
+| Close with `keepAlive: true`           | Retained     | Retained, hidden after first open |
+| Close with `closeBehavior: 'dispose'`  | Removed      | Unmounted, even with keepAlive    |
+| `unregister(id)`                       | Removed      | Unmounted                         |
+| `clear()`                              | All removed  | All unmounted                     |
 
-// Actions
-store.register(id, options?)      // Register a new window
-store.unregister(id)              // Remove window from store
-store.openWindow(id)              // Open a closed window
-store.closeWindow(id)             // Close an open window
-store.minimizeWindow(id)          // Minimize to dock/shelf
-store.maximizeWindow(id)          // Fill viewport
-store.restoreWindow(id)           // Return to floating geometry
-store.toggleMaximize(id)          // Toggle maximize/restore
-store.focusWindow(id)             // Bring to front, activate
-store.updateGeometry(id, patch)   // Update x/y/width/height
-store.setDockBottom(y)            // Set top offset for maximized windows
-store.clear()                     // Remove all windows
-```
+Initially closed windows mount lazily when first opened. Reopening an unmounted
+window creates fresh component state. A retained hidden canvas does **not** stop
+its own render loop automatically: the application should observe `open` and
+`minimized` and pause work appropriately. Geometry and registration are in-memory;
+“retained” does not mean persisted to disk.
 
-### Components
+Close guards are not included in phase 1. For an application-owned confirmation,
+use `WindowFrame` directly, handle its `close` event and invoke `closeWindow` only
+when approved. `WindowHost` closes immediately. See the lifecycle guide before
+embedding a live renderer.
 
-#### `<WindowFrame>`
+## Documentation
 
-The window chrome component with title bar and resize handles.
-
-**Props:**
-- `windowId: string` — Required. ID of the window in the store.
-- `title?: string` — Window title (default: "Window")
-- `icon?: string` — Icon character or emoji
-- `noResize?: boolean` — Disable resize handles
-- `noMove?: boolean` — Disable title bar drag
-- `noMax?: boolean` — Hide maximize button
-- `noMin?: boolean` — Hide minimize button
-- `noClose?: boolean` — Hide close button
-
-**Events:**
-- `close` — Emitted when close button clicked (handle removal yourself)
-
-**Slots:**
-- `default` — Window body content
-
-#### `<WindowHost>`
-
-Convenience component that renders all open windows.
-
-**Props:**
-- `filter?: (w: WindowState) => boolean` — Filter which windows to render
-- `sort?: (a: WindowState, b: WindowState) => number` — Sort order
-
-**Slots:**
-- `default` — Scoped slot receiving `{ window, windowId }`
-
-### Composables
-
-#### `useWindowDrag(onDelta, onEnd?)`
-
-Low-level drag helper for custom drag implementations.
-
-```ts
-const { onPointerDown } = useWindowDrag(
-  (dx, dy) => console.log('moved', dx, dy),
-  () => console.log('drag ended')
-)
-```
-
-## Customizing Styles
-
-The WindowFrame uses CSS custom properties and scoped styles. Override with higher specificity:
-
-```css
-/* Make windows light-themed */
-.window-frame {
-  background: #f5f5f5 !important;
-  color: #333 !important;
-}
-
-.window-frame__header {
-  background: #e0e0e0 !important;
-}
-
-.window-frame__body {
-  background: #fff !important;
-}
-
-/* Customize active border color */
-.window-frame--active {
-  border-color: #007bff !important;
-}
-```
-
-Or create your own WindowFrame component using the store and `useWindowDrag` composable.
+- [Public API and migration guide](docs/phase-one.md)
+- [Packaged consumers and interaction testing](docs/testing.md)
+- [Roadmap and ownership boundaries](https://github.com/txemavs/nabla-desktop/issues/3)
 
 ## Development
 
-```bash
-npm install
+```sh
+npm ci
 npm run typecheck
 npm test
 npm run build
+npx playwright install chromium
+npm run test:package
 ```
 
-## License
-
-MIT
+MIT licensed. No Agency schemas, authentication, routing or engine dependencies.

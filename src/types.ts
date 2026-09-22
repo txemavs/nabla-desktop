@@ -6,7 +6,7 @@
  * - open:      `open=true`, `minimized=false` — visible (floating or maximized)
  * - minimized: `open=true`, `minimized=true` — hidden but still "open" (e.g. in a dock/shelf)
  *
- * Maximized windows fill the viewport. Only one window can be maximized at a time.
+ * Maximized windows fill the host bounds. Only one window can be maximized at a time.
  * Restoring / minimizing returns to the saved floating geometry.
  *
  * Ephemeral windows are removed from the store on close; persistent windows
@@ -27,6 +27,12 @@ export interface WindowState {
   zIndex: number
   /** Skip CSS motion during the first paint (used for intro animation). */
   introducing?: boolean
+  /** Retain mounted content while closed (WindowHost only). */
+  keepAlive?: boolean
+  /** hide retains registration; dispose removes it on close. */
+  closeBehavior?: 'hide' | 'dispose'
+  /** Internal mount eligibility: initially closed content is mounted lazily. */
+  hasOpened?: boolean
 }
 
 /**
@@ -42,4 +48,19 @@ export interface WindowOptions {
   open?: boolean
   minimized?: boolean
   maximized?: boolean
+  keepAlive?: boolean
+  closeBehavior?: 'hide' | 'dispose'
 }
+
+export interface DesktopInsets {
+  top: number
+  right: number
+  bottom: number
+  left: number
+}
+export interface DesktopBounds {
+  width: number
+  height: number
+  insets: DesktopInsets
+}
+export type MaximizePolicy = 'background' | 'exclusive'

@@ -8,40 +8,40 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
-    }
+      "require": "./dist/index.cjs"
+    },
+    "./style.css": "./dist/style.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "docs",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "vite build",
-    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build",
+    "test:package": "node scripts/test-package.mjs"
   },
   "peerDependencies": {
-    "pinia": "^2.1.0",
+    "pinia": "^2.1.0 || ^4.0.3",
     "vue": "^3.3.0"
   },
-  "peerDependenciesMeta": {
-    "vuetify": {
-      "optional": true
-    }
-  },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/test-utils": "^2.4.4",
+    "pinia": "^2.1.7",
     "typescript": "^5.4.3",
     "vite": "^5.2.8",
     "vite-plugin-dts": "^3.8.1",
     "vitest": "^1.4.0",
     "vue": "^3.4.21",
-    "vue-tsc": "^2.0.7",
-    "pinia": "^2.1.7"
+    "vue-tsc": "^2.0.7"
   },
   "repository": {
     "type": "git",
@@ -58,5 +58,8 @@
   "bugs": {
     "url": "https://github.com/txemavs/nabla-desktop/issues"
   },
-  "homepage": "https://github.com/txemavs/nabla-desktop#readme"
+  "homepage": "https://github.com/txemavs/nabla-desktop#readme",
+  "sideEffects": [
+    "**/*.css"
+  ]
 }
