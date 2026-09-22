@@ -29,6 +29,7 @@ it('never activates missing, closed or minimized windows through lifecycle opera
 })
 it('enforces one maximized window during registration and preserves floating tools', () => {
   const s = useWindowsStore()
+  s.setMaximizePolicy('background')
   s.register('world', { maximized: true })
   s.register('other', { maximized: true })
   expect([...s.windows.values()].filter((w) => w.maximized).map((w) => w.id)).toEqual(['other'])

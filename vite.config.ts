@@ -13,10 +13,10 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: { index: resolve(__dirname, 'src/index.ts'), core: resolve(__dirname, 'src/core.ts') },
       name: 'NablaDesktop',
       formats: ['es', 'cjs'],
-      fileName: 'index',
+      fileName: (format, entry) => `${entry}.${format === 'es' ? 'js' : 'cjs'}`,
     },
     rollupOptions: {
       external: ['vue', 'pinia', 'vuetify'],

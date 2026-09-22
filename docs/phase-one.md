@@ -4,9 +4,9 @@
 
 Desktop owns registration, in-memory layout, focus and visual window chrome. The
 consumer owns documents, routing, render loops and application resources. Vue and
-Pinia remain required for this phase. Studio can eventually use a small Vue shell
+Pinia remain required for this phase. Studio can use a small Vue shell
 around externally owned content, but an external-content mounting adapter is a
-phase-2 deliverable, not an API provided by this release.
+phase-2 deliverable, now documented in [the integration guide](phase-two.md).
 
 ## Public exports
 
@@ -38,7 +38,7 @@ side-effectful so bundlers do not remove an explicit import.
 | `updateGeometry(id, patch)`         | Ignores non-finite values and constrains geometry to the current bounds        |
 | `setBounds(width, height, insets?)` | Updates host bounds and recovers out-of-bounds floating windows                |
 | `fitGeometry(rect)`                 | Returns constrained geometry without applying it                               |
-| `setMaximizePolicy(policy)`         | Chooses `background` (default) or `exclusive`                                  |
+| `setMaximizePolicy(policy)`         | Chooses `exclusive` (default) or `background`                                  |
 | `setDockBottom(y)`                  | Legacy top-inset setter; prefer host `insets`                                  |
 | `clear()`                           | Removes all registrations and cancels introductions, within this instance only |
 

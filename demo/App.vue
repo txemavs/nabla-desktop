@@ -1,9 +1,23 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useWindowsStore, WindowHost, type MaximizePolicy } from '@nabla/desktop'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import {
+  useWindowsStore,
+  WindowHost,
+  type MaximizePolicy,
+  MenuBar,
+  CommandToolbar,
+  ContextMenu,
+  createCommandRegistry,
+  type DesktopMenu,
+} from '@nabla/desktop'
 import World from './World.vue'
 import Notes from './Notes.vue'
 const desktop = useWindowsStore()
+const shell = ref<HTMLElement | null>(null)
+const theme = ref('dark')
+const commands = createCommandRegistry()
+const context = computed(() => ({ scope: desktop.activeWindowId ?? undefined }))
+let unbind: (() => void) | undefined
 const color = ref('#529ddd'),
   height = ref(90),
   grid = ref(true),
@@ -18,12 +32,19 @@ function log(message: string) {
 }
 function reset() {
   desktop.clear()
-  desktop.setMaximizePolicy('background')
+  desktop.setMaximizePolicy('exclusive')
   compact.value = false
   color.value = '#529ddd'
   height.value = 90
   grid.value = true
-  desktop.register('world', { title: 'Vista del mundo', maximized: true, keepAlive: true })
+  desktop.register('world', {
+    title: 'Vista del mundo',
+    x: 15,
+    y: 15,
+    width: 740,
+    height: 525,
+    keepAlive: true,
+  })
   desktop.register('properties', { title: 'Propiedades', width: 285, height: 375, x: 470, y: 65 })
   desktop.register('notes', {
     title: 'Cuaderno',
@@ -60,14 +81,102 @@ watch(
     if (id) log(`Foco: ${desktop.windows.get(id)?.title}`)
   },
 )
+
+commands.register({
+  id: 'world',
+  label: 'Vista del mundo',
+  shortcut: 'Mod+1',
+  execute: () => open('world'),
+})
+commands.register({
+  id: 'notes',
+  label: 'Cuaderno',
+  shortcut: 'Mod+2',
+  execute: () => open('notes'),
+})
+commands.register({ id: 'properties', label: 'Propiedades', execute: () => open('properties') })
+commands.register({
+  id: 'temporary',
+  label: 'Nueva ventana',
+  shortcut: 'Mod+Shift+n',
+  execute: temporary,
+})
+commands.register({
+  id: 'grid',
+  label: 'Mostrar rejilla',
+  shortcut: 'g',
+  checked: () => grid.value,
+  execute: () => {
+    grid.value = !grid.value
+  },
+})
+commands.register({
+  id: 'maximize',
+  label: 'Maximizar activa',
+  enabled: () => !!active.value?.open,
+  execute: () => {
+    if (active.value) desktop.maximizeWindow(active.value.id)
+  },
+})
+commands.register({ id: 'reset', label: 'Reiniciar demo', execute: reset })
+const menus: DesktopMenu[] = [
+  {
+    id: 'file',
+    label: 'Archivo',
+    items: [
+      { command: 'temporary' },
+      { command: 'notes' },
+      { separator: true },
+      { command: 'reset' },
+    ],
+  },
+  {
+    id: 'view',
+    label: 'Ver',
+    items: [
+      { command: 'world' },
+      { command: 'properties' },
+      { command: 'grid' },
+      { command: 'maximize' },
+      { label: 'Abrir herramienta', children: [{ command: 'notes' }, { command: 'temporary' }] },
+    ],
+  },
+]
+watch([grid, () => desktop.activeWindowId, () => active.value?.open], () => commands.notify())
+onMounted(() => {
+  unbind = commands.attachShortcuts(
+    shell.value!,
+    () => context.value,
+    (error) => log(String(error)),
+  )
+})
+onBeforeUnmount(() => unbind?.())
+function menuStart() {
+  if (document.pointerLockElement) void document.exitPointerLock()
+  log('Menú abierto · atajos suspendidos')
+}
 </script>
 <template>
-  <div class="lab">
+  <div ref="shell" class="lab" :class="{ 'light-theme': theme === 'light' }" tabindex="-1">
     <header class="topbar">
       <a class="brand" href="./"><span>▽</span> Nabla <b>Desktop</b></a
-      ><span class="pill">Laboratorio · Fase 1</span
+      ><span class="pill">Laboratorio · Fase 2</span
       ><button class="reset" @click="reset">Reiniciar demo</button>
     </header>
+    <div class="demo-menubar">
+      <MenuBar
+        :registry="commands"
+        :menus="menus"
+        :context="context"
+        @interaction-start="menuStart"
+        @error="log(String($event))"
+      /><CommandToolbar
+        :registry="commands"
+        :commands="['notes', 'grid']"
+        :context="context"
+        label="Herramientas"
+      />
+    </div>
     <div class="layout">
       <aside class="sidebar">
         <p class="eyebrow">ABRE Y PRUEBA</p>
@@ -75,7 +184,7 @@ watch(
         <p class="intro">Ventanas reales, controles conectados y estado compartido.</p>
         <div class="launchers">
           <button @click="open('world')">
-            ▧ <span>Vista del mundo<small>Fondo maximizado + herramientas</small></span></button
+            ▧ <span>Vista del mundo<small>Lienzo externo sin Vue</small></span></button
           ><button @click="open('properties')">
             ☷ <span>Propiedades<small>Edita el bloque en directo</small></span></button
           ><button @click="open('notes')">
@@ -85,10 +194,15 @@ watch(
           </button>
         </div>
         <div class="settings">
+          <label for="theme">Tema</label
+          ><select id="theme" v-model="theme">
+            <option value="dark">Gris Agency</option>
+            <option value="light">Claro</option>
+          </select>
           <label for="policy">Al maximizar</label
           ><select id="policy" :value="desktop.maximizePolicy" @change="policy">
             <option value="background">Mundo al fondo + herramientas</option>
-            <option value="exclusive">Modo exclusivo</option></select
+            <option value="exclusive">Ventana maximizada al frente</option></select
           ><label class="check"
             ><input type="checkbox" v-model="compact" /> Contenedor pequeño</label
           >
@@ -105,8 +219,8 @@ watch(
           </p>
         </details>
         <p class="scope">
-          Las ventanas son de Desktop. Los controles y el lienzo son contenido de esta demo; menús,
-          pestañas y docking llegarán en las siguientes fases.
+          Las ventanas son de Desktop. Los controles y el lienzo son contenido de esta demo; los
+          menús y atajos comparten comandos. Pestañas y docking llegarán en las siguientes fases.
         </p>
       </aside>
       <main class="main">
@@ -118,41 +232,50 @@ watch(
           >
         </div>
         <div class="workspace" :class="{ compact }" data-testid="workspace">
-          <WindowHost :store="desktop" v-slot="{ window: win }">
-            <World
-              v-if="win.id === 'world'"
-              :color="color"
-              :height="height"
-              :grid="grid"
-              :active="win.open && !win.minimized"
-              @select="open('properties')"
-            />
-            <div v-else-if="win.id === 'properties'" class="content">
-              <p class="eyebrow">BLOQUE SELECCIONADO</p>
-              <h2>Edificio de prueba</h2>
-              <label for="height"
-                >Altura <output>{{ height }} m</output></label
-              ><input id="height" type="range" min="30" max="150" v-model.number="height" /><label
-                for="color"
-                >Color de fachada</label
-              >
-              <div class="color-row">
-                <input id="color" type="color" v-model="color" /><code>{{ color }}</code>
+          <ContextMenu
+            :registry="commands"
+            :items="[{ command: 'properties' }, { command: 'grid' }, { command: 'maximize' }]"
+            :context="context"
+            @interaction-start="menuStart"
+            ><WindowHost :store="desktop" v-slot="{ window: win }">
+              <World
+                v-if="win.id === 'world'"
+                :color="color"
+                :height="height"
+                :grid="grid"
+                :active="win.open && !win.minimized"
+                :focused="desktop.activeWindowId === win.id"
+                @select="open('properties')"
+              />
+              <div v-else-if="win.id === 'properties'" class="content">
+                <p class="eyebrow">BLOQUE SELECCIONADO</p>
+                <h2>Edificio de prueba</h2>
+                <label for="height"
+                  >Altura <output>{{ height }} m</output></label
+                ><input id="height" type="range" min="30" max="150" v-model.number="height" /><label
+                  for="color"
+                  >Color de fachada</label
+                >
+                <div class="color-row">
+                  <input id="color" type="color" v-model="color" /><code>{{ color }}</code>
+                </div>
+                <label class="check"
+                  ><input type="checkbox" v-model="grid" /> Mostrar rejilla</label
+                >
+                <p class="hint">Estos controles modifican la vista del mundo inmediatamente.</p>
               </div>
-              <label class="check"><input type="checkbox" v-model="grid" /> Mostrar rejilla</label>
-              <p class="hint">Estos controles modifican la vista del mundo inmediatamente.</p>
-            </div>
-            <Notes v-else-if="win.id === 'notes'" />
-            <div v-else class="content">
-              <p class="eyebrow">VENTANA DESECHABLE</p>
-              <h2>Una herramienta más</h2>
-              <p>
-                Muévela, cámbiale el tamaño y ciérrala. Desaparecerá del registro y de la barra
-                inferior.
-              </p>
-              <button @click="desktop.closeWindow(win.id)">Cerrar y eliminar</button>
-            </div>
-          </WindowHost>
+              <Notes v-else-if="win.id === 'notes'" />
+              <div v-else class="content">
+                <p class="eyebrow">VENTANA DESECHABLE</p>
+                <h2>Una herramienta más</h2>
+                <p>
+                  Muévela, cámbiale el tamaño y ciérrala. Desaparecerá del registro y de la barra
+                  inferior.
+                </p>
+                <button @click="desktop.closeWindow(win.id)">Cerrar y eliminar</button>
+              </div>
+            </WindowHost></ContextMenu
+          >
         </div>
         <nav class="taskbar" aria-label="Ventanas">
           <button

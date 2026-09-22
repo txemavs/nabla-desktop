@@ -435,3 +435,48 @@ footer {
     display: none;
   }
 }
+.demo-menubar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 24px;
+  background: var(--nd-surface, #1e1e1e);
+  border-bottom: 1px solid #333;
+  gap: 15px;
+}
+.light-theme {
+  --nd-surface: #fafafa;
+  --nd-text: #242424;
+  --nd-muted: #555;
+  --nd-header: #e4e4e4;
+  --nd-border: #bbb;
+  --nd-hover: #dedede;
+  --nd-accent: #1976d2;
+  --nd-font-size: 14px;
+}
+.light-theme .window-frame .content {
+  color: #242424;
+}
+.light-theme .hint,
+.light-theme .content label {
+  color: #555;
+}
+.light-theme .note textarea {
+  background: #fff;
+  color: #242424;
+}
+.world-view .desktop-external-content {
+  position: absolute;
+  inset: 0;
+}
+.settings select {
+  margin-bottom: 12px;
+}
+@media (max-width: 650px) {
+  .demo-menubar {
+    padding: 5px 12px;
+  }
+  .desktop-command-toolbar {
+    display: none;
+  }
+}

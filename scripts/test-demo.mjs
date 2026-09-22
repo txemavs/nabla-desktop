@@ -48,11 +48,68 @@ try {
   await page.getByLabel('Contenedor pequeño').uncheck()
   await page.getByRole('button', { name: 'Reiniciar demo' }).click()
   await page.waitForFunction(() => document.querySelector('canvas')?.dataset.height === '90')
+  // Maximization must cover floating tools with the conventional default.
+  await world.getByRole('button', { name: 'Maximize', exact: true }).click()
+  await page.waitForTimeout(400)
+  assert.equal(
+    await page.locator('[data-window-id="properties"]').evaluate((el) => {
+      const r = el.getBoundingClientRect()
+      return document
+        .elementFromPoint(r.x + r.width / 2, r.y + 80)
+        ?.closest('[data-window-id]')
+        ?.getAttribute('data-window-id')
+    }),
+    'world',
+  )
+  await page.getByRole('button', { name: 'Reiniciar demo', exact: true }).click()
+  await page.getByRole('button', { name: 'Ver', exact: true }).click()
+  await page.getByRole('menuitemcheckbox', { name: 'Mostrar rejilla' }).click()
+  assert.equal(
+    await page
+      .getByRole('group', { name: 'Herramientas' })
+      .getByRole('button', { name: 'Mostrar rejilla' })
+      .getAttribute('aria-pressed'),
+    'false',
+  )
+  await page.locator('.lab').focus()
+  await page.keyboard.press('g')
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector('.desktop-command-toolbar button[aria-pressed]')
+        ?.getAttribute('aria-pressed') === 'true',
+  )
+  await page.getByRole('button', { name: 'Archivo', exact: true }).focus()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await notes.waitFor({ state: 'visible' })
+  await notes.locator('textarea').fill('g')
+  assert.equal(
+    await page
+      .getByRole('group', { name: 'Herramientas' })
+      .getByRole('button', { name: 'Mostrar rejilla' })
+      .getAttribute('aria-pressed'),
+    'true',
+  )
+  await notes.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.getByRole('button', { name: 'Ver', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Abrir herramienta' }).click()
+  await page.getByRole('menuitem', { name: 'Cuaderno' }).click()
+  await notes.waitFor({ state: 'visible' })
+  assert.equal(await page.getByRole('menu').count(), 0)
+  await page.locator('[data-testid="workspace"]').click({ button: 'right', position: { x: 15, y: 15 } })
+  await page.getByRole('menuitemcheckbox', { name: 'Mostrar rejilla' }).waitFor()
+  await page.keyboard.press('Escape')
+  assert.equal(await page.getByRole('menu').count(), 0)
+  await page.getByLabel('Tema', { exact: true }).selectOption('light')
+  assert.ok(await page.locator('.lab').evaluate((el) => el.classList.contains('light-theme')))
+  await page.getByLabel('Tema', { exact: true }).selectOption('dark')
   if (process.env.DEMO_SCREENSHOT)
     await page.screenshot({ path: process.env.DEMO_SCREENSHOT, fullPage: true })
   assert.deepEqual(errors, [])
   console.log(
-    'PASS demo: linked height/color, note retention, minimize/reopen, disposable window, container resizing and reset',
+    'PASS demo: linked height/color, note retention, minimize/reopen, disposable window, container resizing, foreground maximization, menus, shortcuts, input isolation and themes',
   )
 } finally {
   await browser?.close()
