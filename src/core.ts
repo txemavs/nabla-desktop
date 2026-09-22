@@ -23,3 +23,13 @@ export type {
   PlacedGroup,
   PlacedDivider,
 } from './core/workspace'
+export { createDetachedHost } from './core/detached'
+export type {
+  DetachedHost,
+  DetachedHostOptions,
+  DetachedView,
+  DetachedContent,
+  DetachedBridge,
+  DetachedCloseReason,
+  DetachedOpenResult,
+} from './core/detached'

@@ -4,11 +4,12 @@ A Vue 3 window shell for Agency, Nabla Studio and other applications. The packag
 provides floating windows, container-relative layout, focus and stacking,
 maximization policies, drag/resize and explicit content lifetime options.
 
-This includes **phases 1–3** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
+This includes **phases 1–4** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
 Shared commands, menus, context menus, toolbars, scoped shortcuts, theme tokens and
 external DOM/canvas content adapters are available. WorkspaceHost adds tabs, split
 panes, docking, internal floating panels, guarded close and versioned layout storage.
-Detached browser windows remain a future phase. Application state, rendering
+An optional same-origin detached-view adapter synchronizes child inspectors with a
+single application owner. Production Agency/Studio integration remains separate. Application state, rendering
 and business logic remain outside Desktop.
 
 ## Installation
@@ -119,13 +120,15 @@ its own render loop automatically: the application should observe `open` and
 `minimized` and pause work appropriately. Geometry and registration are in-memory;
 “retained” does not mean persisted to disk.
 
-Close guards are not included in phase 1. For an application-owned confirmation,
+`WindowHost` retains its immediate-close behavior. For an application-owned confirmation,
 use `WindowFrame` directly, handle its `close` event and invoke `closeWindow` only
 when approved. `WindowHost` closes immediately. See the lifecycle guide before
-embedding a live renderer.
+embedding a live renderer. `WorkspaceHost` provides async close guards; see the
+[workspace guide](docs/phase-three.md).
 
 ## Documentation
 
+- [Detached browser views and synchronization](docs/phase-four.md)
 - [Workspaces, docking, dialogs and persistence](docs/phase-three.md)
 - [Commands, themes and external content](docs/phase-two.md)
 - [Public API and migration guide](docs/phase-one.md)

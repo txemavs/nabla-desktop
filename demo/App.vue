@@ -162,7 +162,7 @@ function menuStart() {
   <div ref="shell" class="lab" :class="{ 'light-theme': theme === 'light' }" tabindex="-1">
     <header class="topbar">
       <a class="brand" href="./"><span>▽</span> Nabla <b>Desktop</b></a
-      ><span class="pill">Laboratorio · Fase 3</span
+      ><span class="pill">Laboratorio · Fase 4</span
       ><button class="reset" @click="workspaceMode = !workspaceMode">
         {{ workspaceMode ? 'Ventanas y menús' : 'Probar paneles y pestañas' }}</button
       ><button class="reset" @click="reset">Reiniciar demo</button>

@@ -2,6 +2,7 @@
 import { ref, onBeforeUnmount, watch } from 'vue'
 import {
   createWorkspace,
+  createDetachedHost,
   WorkspaceHost,
   DesktopButton,
   DesktopDialog,
@@ -11,6 +12,7 @@ import {
   type LayoutStorage,
 } from '@nabla/desktop'
 import World from './World.vue'
+import { inspector, type InspectorState, type InspectorAction } from './detached-inspector'
 const props = defineProps<{ shown: boolean }>()
 function markClean() {
   dirty.value = false
@@ -25,6 +27,33 @@ const height = ref(90),
   compact = ref(false),
   message = ref('Distribución de trabajo preparada'),
   worldOnly = ref(false)
+const detached = createDetachedHost<InspectorState, InspectorAction>({
+  read: () => ({ height: height.value, text: text.value }),
+  subscribe: (changed) => watch([height, text], changed, { flush: 'sync' }),
+  dispatch: (action) => {
+    if (action.type === 'height' && Number.isFinite(action.value))
+      height.value = Math.max(30, Math.min(150, action.value))
+    else if (action.type === 'text' && typeof action.value === 'string') {
+      text.value = action.value
+      dirty.value = true
+    }
+  },
+  onClose: () => {
+    message.value = 'Inspector cerrado; el mundo y el documento siguen aquí'
+  },
+  onError: (error) => {
+    message.value = String(error)
+  },
+})
+function openInspector() {
+  const result = detached.open('inspector', inspector)
+  message.value =
+    result === 'blocked'
+      ? 'El navegador ha bloqueado la ventana. Permite ventanas emergentes y pulsa otra vez.'
+      : result === 'opened' || result === 'focused'
+        ? 'Inspector conectado a la misma aplicación'
+        : `No se pudo abrir el inspector: ${result}`
+}
 let resolveClose: ((value: boolean) => void) | undefined
 const unregister = [
   workspace.register({ id: 'scene', title: 'Mundo' }),
@@ -120,6 +149,7 @@ function immersive() {
   }
 }
 onBeforeUnmount(() => {
+  detached.dispose()
   decide(false)
   unregister.forEach((fn) => fn())
 })
@@ -128,7 +158,7 @@ onBeforeUnmount(() => {
   <section class="workspace-lab">
     <div class="workspace-intro">
       <div>
-        <p class="eyebrow">FASE 3 · ESPACIO DE TRABAJO</p>
+        <p class="eyebrow">FASE 4 · ESPACIO DE TRABAJO</p>
         <h1>Un contenido. Muchas formas de trabajar.</h1>
         <p>
           Arrastra las pestañas al centro o a los bordes. Usa las flechas para dividir, ↗ para
@@ -137,6 +167,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div class="workspace-tools">
+      <DesktopButton @click="openInspector">Abrir ventana independiente</DesktopButton>
       <DesktopButton @click="save">Guardar distribución</DesktopButton
       ><DesktopButton @click="load">Recuperar distribución</DesktopButton
       ><DesktopButton @click="reset">Restablecer paneles</DesktopButton

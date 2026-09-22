@@ -51,3 +51,10 @@ notes and scene settings are not persisted. Try **Solo mundo** and **Espacio peq
 The native canvas retains its DOM identity through all layout changes.
 
 `npm run test:demo` now also runs `test:workspace`, exercising these workflows.
+
+## Detached inspector (phase 4)
+
+Inside the workspace lab choose **Abrir ventana independiente**. The native inspector
+shares building height and document text with the owner. Return, close and reopen
+it without losing owner state. If popups are blocked, the owner shows a message
+and stays usable. `test:demo` also runs `test:detached` for these workflows.

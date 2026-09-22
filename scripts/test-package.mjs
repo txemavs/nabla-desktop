@@ -50,7 +50,7 @@ try {
     run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], cwd)
     writeFileSync(
       join(cwd, 'consumer.ts'),
-      `import { defineWindowsStore, WindowHost, type WindowOptions } from '@nabla/desktop'; import { createWorkspace, type WorkspaceSnapshot, createCommandRegistry, type ContentFactory } from '@nabla/desktop/core'; import { MenuBar, ContextMenu, CommandToolbar, ExternalContent } from '@nabla/desktop'; import { createPinia } from 'pinia'; const workspace = createWorkspace(); const snapshot: WorkspaceSnapshot = workspace.snapshot(); void snapshot; const registry = createCommandRegistry(); registry.register({id:'test',label:'Test',execute() {}}); const factory: ContentFactory = () => ({dispose() {}}); void [factory, MenuBar, ContextMenu, CommandToolbar, ExternalContent]; const options: WindowOptions = { keepAlive: true, closeBehavior: 'hide' }; defineWindowsStore('typed')(createPinia()).register('world', options); void WindowHost;`,
+      `import { defineWindowsStore, WindowHost, type WindowOptions } from '@nabla/desktop'; import { createDetachedHost, createWorkspace, type WorkspaceSnapshot, createCommandRegistry, type ContentFactory } from '@nabla/desktop/core'; import { MenuBar, ContextMenu, CommandToolbar, ExternalContent } from '@nabla/desktop'; import { createPinia } from 'pinia'; const workspace = createWorkspace(); const snapshot: WorkspaceSnapshot = workspace.snapshot(); void snapshot; void createDetachedHost; const registry = createCommandRegistry(); registry.register({id:'test',label:'Test',execute() {}}); const factory: ContentFactory = () => ({dispose() {}}); void [factory, MenuBar, ContextMenu, CommandToolbar, ExternalContent]; const options: WindowOptions = { keepAlive: true, closeBehavior: 'hide' }; defineWindowsStore('typed')(createPinia()).register('world', options); void WindowHost;`,
     )
     run(
       process.execPath,
@@ -172,6 +172,15 @@ try {
       })
       assert.equal(await page.evaluate(() => window.workspaceTest.mounts), 1)
       assert.equal(await workspace.locator('canvas').getAttribute('data-visible'), 'true')
+      const popupPromise = page.waitForEvent('popup')
+      await page.getByRole('button', { name: 'Open packed inspector' }).click()
+      const popup = await popupPromise
+      assert.equal(await popup.locator('output').textContent(), 'canvas')
+      await page.evaluate(() => window.workspaceTest.workspace.activate('document'))
+      await popup.waitForFunction(
+        () => document.querySelector('output')?.textContent === 'document',
+      )
+      await popup.close()
       assert.deepEqual(errors, [])
       console.log(
         `PASS packed consumer: ${profile.name} (CSS, types, drag, resize, focus, layering, lifecycle, bounds)`,

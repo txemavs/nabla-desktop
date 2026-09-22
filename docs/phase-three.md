@@ -163,4 +163,4 @@ async guards. Chromium browser tests cover real drag/drop, keyboard operations,
 modal dismissal, canvas identity, retained documents and small bounds. Native browser
 accessibility semantics are used, but screen-reader/Firefox/Safari combinations are
 not certified. HTML drag/drop is desktop-oriented; touch users can use explicit
-controls instead. Detached browser-window synchronization remains phase 4.
+controls instead. The optional detached browser-view adapter is documented in [phase 4](phase-four.md).

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Phase 4
+
+- Add optional same-origin detached browser views with cloned snapshots and owner-dispatched actions.
+- Handle duplicate focus, popup blocking, close/reopen, owner teardown, stale actions and renderer cleanup.
+- Add a synchronized inspector to the demo and packed consumers, with browser lifecycle tests.
+- Document single-owner rendering, browser constraints, CSP/style ownership and reconnection limits.
+
 ## Unreleased — Phase 3
 
 - Add a pure workspace model with tabs, splits, docking, floating groups and validated version-1 snapshots.

@@ -2,7 +2,7 @@ import { createApp, h, ref, onMounted, onUnmounted } from 'vue'
 import { createPinia } from 'pinia'
 import { defineWindowsStore, WindowHost, WorkspaceHost, ExternalContent } from '@nabla/desktop'
 import '@nabla/desktop/style.css'
-import { createWorkspace } from '@nabla/desktop/core'
+import { createWorkspace, createDetachedHost } from '@nabla/desktop/core'
 const app = createApp({
   setup() {
     const store = defineWindowsStore('consumer')()
@@ -66,6 +66,28 @@ const app = createApp({
         dispose: () => canvas.remove(),
       }
     }
+    const detached = createDetachedHost({
+      read: () => workspace.snapshot(),
+      subscribe: (fn) => workspace.subscribe(fn),
+      dispatch: (id) => {
+        workspace.activate(id)
+      },
+    })
+    onUnmounted(() => detached.dispose())
+    const openDetached = () =>
+      detached.open('inspector', {
+        title: 'Packed inspector',
+        mount: (root) => {
+          const output = root.ownerDocument.createElement('output')
+          root.append(output)
+          return {
+            update: (s) => {
+              output.textContent = s.active
+            },
+            dispose: () => output.remove(),
+          }
+        },
+      })
     window.workspaceTest = {
       workspace,
       get mounts() {
@@ -74,6 +96,7 @@ const app = createApp({
     }
     window.desktopTest = { store, counts, disposed }
     return () => [
+      h('button', { id: 'packed-detach', onClick: openDetached }, 'Open packed inspector'),
       h(
         'div',
         {
