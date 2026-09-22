@@ -25,7 +25,11 @@
     "test:watch": "vitest",
     "build": "vite build",
     "prepublishOnly": "npm run typecheck && npm run test && npm run build",
-    "test:package": "node scripts/test-package.mjs"
+    "test:package": "node scripts/test-package.mjs",
+    "dev:demo": "npm run build && vite --config vite.demo.config.ts --host 127.0.0.1",
+    "build:demo": "npm run build && vite build --config vite.demo.config.ts",
+    "typecheck:demo": "vue-tsc --noEmit -p tsconfig.demo.json",
+    "test:demo": "npm run build:demo && npm run typecheck:demo && node scripts/test-demo.mjs"
   },
   "peerDependencies": {
     "pinia": "^2.1.0 || ^4.0.3",

@@ -16,12 +16,12 @@ a development build, install the `.tgz` produced by `npm pack`; the examples bel
 refer to the package name, not repository source paths.
 
 ```ts
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import App from "./App.vue";
-import "@nabla/desktop/style.css"; // required, explicit public stylesheet export
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import '@nabla/desktop/style.css' // required, explicit public stylesheet export
 
-createApp(App).use(createPinia()).mount("#app");
+createApp(App).use(createPinia()).mount('#app')
 ```
 
 The peer range supports Vue `^3.3.0` and Pinia `^2.1.0 || ^4.0.3`. Automated packed
@@ -39,21 +39,21 @@ versions within the peer ranges are not individually certified by this matrix.
 
 ```vue
 <script setup lang="ts">
-import { WindowHost, useWindowsStore } from "@nabla/desktop";
+import { WindowHost, useWindowsStore } from '@nabla/desktop'
 
-const desktop = useWindowsStore();
-desktop.register("world", {
-  title: "World",
+const desktop = useWindowsStore()
+desktop.register('world', {
+  title: 'World',
   maximized: true,
   keepAlive: true,
-});
-desktop.register("properties", {
-  title: "Properties",
+})
+desktop.register('properties', {
+  title: 'Properties',
   x: 40,
   y: 60,
   width: 300,
   height: 400,
-});
+})
 </script>
 
 <template>
@@ -88,9 +88,9 @@ policy in which focusing a floating window restores the maximized one.
 Define one store factory per workspace identity, outside component setup:
 
 ```ts
-import { defineWindowsStore } from "@nabla/desktop";
-export const useStudioDesktop = defineWindowsStore("studio-desktop");
-export const useAgencyDesktop = defineWindowsStore("agency-desktop");
+import { defineWindowsStore } from '@nabla/desktop'
+export const useStudioDesktop = defineWindowsStore('studio-desktop')
+export const useAgencyDesktop = defineWindowsStore('agency-desktop')
 ```
 
 Each factory follows Pinia's identity rules. Different IDs give isolated desktops
@@ -139,3 +139,9 @@ npm run test:package
 ```
 
 MIT licensed. No Agency schemas, authentication, routing or engine dependencies.
+
+## Interactive lab
+
+Run `npm run dev:demo` to try connected window controls, a properties-driven canvas,
+retained notes and disposable windows. `npm run build:demo` produces `demo-dist/`
+for static hosting. See [the demo guide](docs/demo.md) for interactions and scope.
