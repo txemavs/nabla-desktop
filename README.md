@@ -4,10 +4,11 @@ A Vue 3 window shell for Agency, Nabla Studio and other applications. The packag
 provides floating windows, container-relative layout, focus and stacking,
 maximization policies, drag/resize and explicit content lifetime options.
 
-This includes **phases 1 and 2** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
+This includes **phases 1–3** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
 Shared commands, menus, context menus, toolbars, scoped shortcuts, theme tokens and
-external DOM/canvas content adapters are available. Tabs, docking, persistence and
-separate browser windows are not implemented yet. Application state, rendering
+external DOM/canvas content adapters are available. WorkspaceHost adds tabs, split
+panes, docking, internal floating panels, guarded close and versioned layout storage.
+Detached browser windows remain a future phase. Application state, rendering
 and business logic remain outside Desktop.
 
 ## Installation
@@ -125,6 +126,7 @@ embedding a live renderer.
 
 ## Documentation
 
+- [Workspaces, docking, dialogs and persistence](docs/phase-three.md)
 - [Commands, themes and external content](docs/phase-two.md)
 - [Public API and migration guide](docs/phase-one.md)
 - [Packaged consumers and interaction testing](docs/testing.md)

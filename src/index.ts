@@ -28,3 +28,8 @@ export { default as CommandToolbar } from './components/CommandToolbar.vue'
 export { default as CommandMenu } from './components/CommandMenu.vue'
 
 export { default as ContextMenu } from './components/ContextMenu.vue'
+export { default as WorkspaceHost } from './components/WorkspaceHost.vue'
+export { default as DesktopDialog } from './components/DesktopDialog.vue'
+export { default as DesktopButton } from './components/DesktopButton.vue'
+export { default as SettingsGroup } from './components/SettingsGroup.vue'
+export { default as StatusBar } from './components/StatusBar.vue'

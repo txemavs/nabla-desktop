@@ -50,7 +50,7 @@ try {
     run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], cwd)
     writeFileSync(
       join(cwd, 'consumer.ts'),
-      `import { defineWindowsStore, WindowHost, type WindowOptions } from '@nabla/desktop'; import { createCommandRegistry, type ContentFactory } from '@nabla/desktop/core'; import { MenuBar, ContextMenu, CommandToolbar, ExternalContent } from '@nabla/desktop'; import { createPinia } from 'pinia'; const registry = createCommandRegistry(); registry.register({id:'test',label:'Test',execute() {}}); const factory: ContentFactory = () => ({dispose() {}}); void [factory, MenuBar, ContextMenu, CommandToolbar, ExternalContent]; const options: WindowOptions = { keepAlive: true, closeBehavior: 'hide' }; defineWindowsStore('typed')(createPinia()).register('world', options); void WindowHost;`,
+      `import { defineWindowsStore, WindowHost, type WindowOptions } from '@nabla/desktop'; import { createWorkspace, type WorkspaceSnapshot, createCommandRegistry, type ContentFactory } from '@nabla/desktop/core'; import { MenuBar, ContextMenu, CommandToolbar, ExternalContent } from '@nabla/desktop'; import { createPinia } from 'pinia'; const workspace = createWorkspace(); const snapshot: WorkspaceSnapshot = workspace.snapshot(); void snapshot; const registry = createCommandRegistry(); registry.register({id:'test',label:'Test',execute() {}}); const factory: ContentFactory = () => ({dispose() {}}); void [factory, MenuBar, ContextMenu, CommandToolbar, ExternalContent]; const options: WindowOptions = { keepAlive: true, closeBehavior: 'hide' }; defineWindowsStore('typed')(createPinia()).register('world', options); void WindowHost;`,
     )
     run(
       process.execPath,
@@ -147,6 +147,31 @@ try {
       for (const w of await page.evaluate(() => [...window.desktopTest.store.windows.values()])) {
         assert.ok(w.x >= 8 && w.y >= 24 && w.x + w.width <= 312 && w.y + w.height <= 212)
       }
+      const workspace = page.locator('#packed-workspace')
+      await workspace.getByRole('textbox').fill('Packed document survives')
+      await workspace.getByRole('button', { name: 'Float panel', exact: true }).click()
+      await workspace
+        .locator('.nd-floating')
+        .getByRole('button', { name: 'Dock panel', exact: true })
+        .click()
+      assert.equal(await workspace.getByRole('textbox').inputValue(), 'Packed document survives')
+      await workspace.getByRole('tab', { name: 'Native view', exact: true }).click()
+      assert.equal(await page.evaluate(() => window.workspaceTest.mounts), 1)
+      await page.evaluate(async () => {
+        const w = window.workspaceTest.workspace
+        let saved
+        const storage = {
+          save: (s) => {
+            saved = s
+          },
+          load: () => saved,
+        }
+        await w.save(storage)
+        w.float('canvas')
+        await w.load(storage)
+      })
+      assert.equal(await page.evaluate(() => window.workspaceTest.mounts), 1)
+      assert.equal(await workspace.locator('canvas').getAttribute('data-visible'), 'true')
       assert.deepEqual(errors, [])
       console.log(
         `PASS packed consumer: ${profile.name} (CSS, types, drag, resize, focus, layering, lifecycle, bounds)`,

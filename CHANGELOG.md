@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Phase 3
+
+- Add a pure workspace model with tabs, splits, docking, floating groups and validated version-1 snapshots.
+- Add WorkspaceHost with stable content identity, keyboard/pointer layout controls and small-container bounds.
+- Add async document-close guards, DesktopDialog, DesktopButton, SettingsGroup and StatusBar.
+- Extend the lab and both packed consumers with live native/Vue workspace content and persistence.
+- Document migration, ownership, keyboard/localization contracts and remaining control/browser limitations.
+
 ## Unreleased — Phase 2
 
 - Default to foreground maximization; background world mode remains opt-in.
