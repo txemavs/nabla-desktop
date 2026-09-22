@@ -25,3 +25,8 @@ Install Chromium with `npx playwright install chromium` (CI uses `--with-deps`).
 A local executable may be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 The test requires registry access to install the exact consumer versions. It does
 not publish packages, change production applications or contact their backends.
+
+Phase 2 adds core command availability/concurrency/modifier tests and external-content
+lifecycle cleanup tests. The demo browser suite covers foreground maximization,
+shared menu/toolbar/shortcut state, text-input isolation, nested/context menus and
+theme switching. Packaged consumer type checks include the core and new UI exports.

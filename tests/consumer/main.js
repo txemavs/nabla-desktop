@@ -5,6 +5,7 @@ import '@nabla/desktop/style.css'
 const app = createApp({
   setup() {
     const store = defineWindowsStore('consumer')()
+    store.setMaximizePolicy('background')
     const counts = {},
       disposed = {}
     store.register('world', {

@@ -26,7 +26,7 @@ export function defineWindowsStore(id: string) {
   return defineStore(id, () => {
     let nextZ = 10
     let cascadeIndex = 0
-    const maximizePolicy = ref<MaximizePolicy>('background')
+    const maximizePolicy = ref<MaximizePolicy>('exclusive')
     const bounds = reactive({
       width: 1280,
       height: 800,

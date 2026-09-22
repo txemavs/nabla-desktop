@@ -293,9 +293,9 @@ function onClose() {
   flex-direction: column;
   overflow: hidden;
   border-radius: 8px;
-  border: 1px solid #666;
-  background: #1e1e1e;
-  color: #e0e0e0;
+  border: 1px solid var(--nd-border, #666);
+  background: var(--nd-surface, #1e1e1e);
+  color: var(--nd-text, #e0e0e0);
   box-shadow:
     0 14px 28px rgba(0, 0, 0, 0.25),
     0 10px 10px rgba(0, 0, 0, 0.22);
@@ -318,7 +318,7 @@ function onClose() {
 }
 
 .window-frame--active {
-  border-color: #4a90d9;
+  border-color: var(--nd-accent, #4a90d9);
 }
 
 .window-frame--motion {
@@ -346,8 +346,8 @@ function onClose() {
   flex-shrink: 0;
   cursor: default;
   user-select: none;
-  border-bottom: 1px solid #444;
-  background: #2d2d2d;
+  border-bottom: 1px solid var(--nd-border, #444);
+  background: var(--nd-header, #2d2d2d);
 }
 
 .window-frame__title {
@@ -368,7 +368,7 @@ function onClose() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: var(--nd-font-size, 13px);
   font-weight: 500;
 }
 
@@ -412,7 +412,7 @@ function onClose() {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  background: #1e1e1e;
+  background: var(--nd-surface, #1e1e1e);
   outline: none;
 }
 

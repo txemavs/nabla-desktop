@@ -18,7 +18,7 @@ subdirectory. No production hostname or server credentials belong in the repo.
 
 1. Change height/color/grid in Properties: the canvas updates immediately.
 2. Click the block to reopen its Properties panel.
-3. Drag and resize a window, maximize the world, then focus its floating tools.
+3. Drag and resize a window, maximize the world: it covers other windows by default.
 4. Open Notes, type text, minimize/close it and reopen from the taskbar: content is
    retained through WindowHost's keep-alive policy.
 5. Create a temporary window and close it: its registration and taskbar entry go away.
@@ -27,8 +27,14 @@ subdirectory. No production hostname or server credentials belong in the repo.
 
 The canvas is an inexpensive **2D test view**, not Nabla Engine. Its render loop
 pauses while hidden and survives keep-alive close/reopen. Form controls, taskbar
-and launchers are demo-owned content, not a claim that phase-2 menu/tab components
-are already available in Desktop.
+and launchers are demo-owned content. MenuBar, ContextMenu, CommandToolbar and
+ExternalContent come from Desktop. The canvas factory imports only the pure core
+types and uses native DOM/canvas APIs; the notes view is a Vue consumer.
+
+Use Archivo/Ver, the toolbar or shortcuts to execute shared commands. Right-click
+the workspace for its context menu. Menus support arrows, Enter and Escape.
+Typing `g` in Notes does not toggle the grid; pressing it with workspace focus
+does. Select the light theme to exercise inherited tokens. Tabs are still deferred.
 
 `npm run test:demo` builds the app, checks its Vue/TypeScript code and runs Chromium
 checks for linked controls, note retention, minimization, disposable windows,

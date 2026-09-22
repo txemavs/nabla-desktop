@@ -50,7 +50,7 @@ try {
     run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], cwd)
     writeFileSync(
       join(cwd, 'consumer.ts'),
-      `import { defineWindowsStore, WindowHost, type WindowOptions } from '@nabla/desktop'; import { createPinia } from 'pinia'; const options: WindowOptions = { keepAlive: true, closeBehavior: 'hide' }; defineWindowsStore('typed')(createPinia()).register('world', options); void WindowHost;`,
+      `import { defineWindowsStore, WindowHost, type WindowOptions } from '@nabla/desktop'; import { createCommandRegistry, type ContentFactory } from '@nabla/desktop/core'; import { MenuBar, ContextMenu, CommandToolbar, ExternalContent } from '@nabla/desktop'; import { createPinia } from 'pinia'; const registry = createCommandRegistry(); registry.register({id:'test',label:'Test',execute() {}}); const factory: ContentFactory = () => ({dispose() {}}); void [factory, MenuBar, ContextMenu, CommandToolbar, ExternalContent]; const options: WindowOptions = { keepAlive: true, closeBehavior: 'hide' }; defineWindowsStore('typed')(createPinia()).register('world', options); void WindowHost;`,
     )
     run(
       process.execPath,

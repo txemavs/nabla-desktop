@@ -4,8 +4,9 @@ A Vue 3 window shell for Agency, Nabla Studio and other applications. The packag
 provides floating windows, container-relative layout, focus and stacking,
 maximization policies, drag/resize and explicit content lifetime options.
 
-This is **phase 1** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
-Menus, tabs, docking, persistence, framework-independent content adapters and
+This includes **phases 1 and 2** of [the shared desktop roadmap](https://github.com/txemavs/nabla-desktop/issues/3).
+Shared commands, menus, context menus, toolbars, scoped shortcuts, theme tokens and
+external DOM/canvas content adapters are available. Tabs, docking, persistence and
 separate browser windows are not implemented yet. Application state, rendering
 and business logic remain outside Desktop.
 
@@ -79,9 +80,10 @@ not the browser viewport. A `ResizeObserver` updates bounds when the container
 changes size. Use `mode="viewport"` for the old full-browser placement and pass
 `insets` to reserve space for the host application's menus or dock.
 
-By default, the maximized window stays in a background layer and floating tools
-remain above it. Use `desktop.setMaximizePolicy('exclusive')` to restore the older
-policy in which focusing a floating window restores the maximized one.
+The default `exclusive` policy brings a maximized window to the front. Focusing
+a floating window restores the maximized one. Choose
+`desktop.setMaximizePolicy('background')` explicitly for a world view that stays
+behind floating tools.
 
 ## Independent desktops
 
@@ -123,6 +125,7 @@ embedding a live renderer.
 
 ## Documentation
 
+- [Commands, themes and external content](docs/phase-two.md)
 - [Public API and migration guide](docs/phase-one.md)
 - [Packaged consumers and interaction testing](docs/testing.md)
 - [Roadmap and ownership boundaries](https://github.com/txemavs/nabla-desktop/issues/3)
