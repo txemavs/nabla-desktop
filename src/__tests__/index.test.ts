@@ -9,7 +9,7 @@ describe('@nabla/desktop', () => {
   })
 
   it('exports VERSION constant', () => {
-    expect(VERSION).toBe('0.1.0')
+    expect(VERSION).toBe('0.2.0')
   })
 
   it('WindowState type is usable', () => {

@@ -37,3 +37,10 @@
 
 Menus, tabs, docking, persistence and detached-browser-window adapters remain on
 the shared roadmap and are not included in this phase.
+
+## 0.2.0
+
+- Add reusable property fields/sheets, sidebar tabs, tree view and activity log.
+- Support draggable nonmodal utility dialogs without changing modal defaults.
+- Share SVG command icons and compact toolbar presentation across applications.
+- Export framework-independent form/tree/log presentation contracts.

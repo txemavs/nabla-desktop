@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue'
+import CommandIcon from './CommandIcon.vue'
 import type { CommandRegistry, CommandContext } from '../core/commands'
 const props = defineProps<{
   registry: CommandRegistry
   commands: string[]
   context?: CommandContext
   label: string
+  iconOnly?: boolean
 }>()
 const emit = defineEmits<{ error: [error: unknown] }>()
 const revision = ref(0)
@@ -25,10 +27,16 @@ async function run(id: string) {
       ><button
         v-if="registry.get(id) && (registry.get(id)?.visible?.() ?? true)"
         :disabled="!registry.available(id, context)"
+        :data-command="id"
+        :title="registry.get(id)?.label"
+        :aria-label="registry.get(id)?.label"
         :aria-pressed="registry.get(id)?.checked?.()"
         @click="run(id)"
       >
-        {{ registry.get(id)?.label }}
+        <CommandIcon v-if="registry.get(id)?.icon" :name="registry.get(id)!.icon!" /><span
+          v-if="!(iconOnly || registry.get(id)?.iconOnly) || !registry.get(id)?.icon"
+          >{{ registry.get(id)?.label }}</span
+        >
       </button></template
     >
   </div>

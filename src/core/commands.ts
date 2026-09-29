@@ -4,6 +4,8 @@ export interface CommandContext {
 export interface DesktopCommand {
   id: string
   label: string
+  icon?: string
+  iconOnly?: boolean
   shortcut?: string
   scope?: string
   allowInInput?: boolean

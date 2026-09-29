@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount, computed, nextTick } from 'vue'
+import CommandIcon from './CommandIcon.vue'
 import type { CommandRegistry, CommandContext, MenuItem } from '../core/commands'
 const props = defineProps<{
   registry: CommandRegistry
@@ -96,9 +97,15 @@ function closeChild(index: number) {
         :role="command(item.command)?.checked ? 'menuitemcheckbox' : 'menuitem'"
         :aria-checked="command(item.command)?.checked?.()"
         :disabled="!enabled(item.command)"
+        :aria-label="command(item.command)?.label"
+        :data-command="item.command"
         @click="run(item.command)"
       >
-        <span class="desktop-check">{{ command(item.command)?.checked?.() ? '✓' : '' }}</span
+        <span class="desktop-check"
+          ><template v-if="command(item.command)?.checked?.()">✓</template
+          ><CommandIcon
+            v-else-if="command(item.command)?.icon"
+            :name="command(item.command)!.icon!" /></span
         ><span>{{ command(item.command)?.label }}</span
         ><kbd v-if="command(item.command)?.shortcut">{{ command(item.command)?.shortcut }}</kbd>
       </button>

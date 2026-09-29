@@ -33,3 +33,4 @@ export type {
   DetachedCloseReason,
   DetachedOpenResult,
 } from './core/detached'
+export * from './core/forms'

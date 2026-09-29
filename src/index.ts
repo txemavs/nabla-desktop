@@ -1,5 +1,5 @@
 import './theme.css'
-export const VERSION = '0.1.0'
+export const VERSION = '0.2.0'
 
 // Types
 export type {
@@ -33,3 +33,10 @@ export { default as DesktopDialog } from './components/DesktopDialog.vue'
 export { default as DesktopButton } from './components/DesktopButton.vue'
 export { default as SettingsGroup } from './components/SettingsGroup.vue'
 export { default as StatusBar } from './components/StatusBar.vue'
+export { default as PropertyField } from './components/PropertyField.vue'
+export { default as PropertySheet } from './components/PropertySheet.vue'
+export { default as SidebarTabs } from './components/SidebarTabs.vue'
+export { default as TreeView } from './components/TreeView.vue'
+export type { FieldValue, PropertySection, TreeNode, LogEntry } from './core/forms'
+export type { PropertyField as PropertyFieldDefinition } from './core/forms'
+export { default as LogView } from './components/LogView.vue'
