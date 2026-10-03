@@ -2,7 +2,8 @@
 .window-host,
 .desktop-menu-bar,
 .desktop-menu-popup,
-.desktop-command-toolbar {
+.desktop-command-toolbar,
+.desktop-action-trigger {
   color: var(--nd-text, #e0e0e0);
   font-family: var(--nd-font, system-ui, sans-serif);
   font-size: var(--nd-font-size, 14px);
@@ -22,6 +23,33 @@
   border-radius: var(--nd-radius, 4px);
   padding: 7px 10px;
   cursor: pointer;
+}
+
+.desktop-action-trigger {
+  font: inherit;
+  color: var(--nd-text, #e0e0e0);
+  background: var(--nd-surface, #1e1e1e);
+  border: 1px solid var(--nd-border, #444);
+  border-radius: var(--nd-radius, 4px);
+  padding: var(--nd-control-padding, 7px 10px);
+  cursor: pointer;
+}
+.desktop-action-trigger:focus-visible {
+  outline: 2px solid var(--nd-accent, #2196f3);
+  outline-offset: -2px;
+}
+.desktop-command-toolbar button[aria-pressed='true'] {
+  border-color: var(--nd-accent, #2196f3);
+}
+
+@media (any-pointer: coarse) {
+  .desktop-menu-bar > button,
+  .desktop-command-toolbar button,
+  .desktop-command-menu button,
+  .desktop-action-trigger {
+    min-height: var(--nd-touch-target, 44px);
+    min-width: var(--nd-touch-target, 44px);
+  }
 }
 .desktop-menu-bar > button:hover,
 .desktop-menu-bar > button[aria-expanded='true'],

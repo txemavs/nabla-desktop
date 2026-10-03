@@ -36,6 +36,7 @@
     "typecheck:demo": "vue-tsc --noEmit -p tsconfig.demo.json",
     "test:demo": "npm run build:demo && npm run typecheck:demo && node scripts/test-demo.mjs && npm run test:workspace && npm run test:detached",
     "test:workspace": "node scripts/test-workspace.mjs",
+    "test:actions": "vue-tsc --noEmit -p tsconfig.actions.json && node scripts/test-actions.mjs",
     "test:detached": "node scripts/test-detached.mjs"
   },
   "peerDependencies": {

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Shared object actions
+
+- Add target-aware command predicates shared by menus, toolbars and shortcuts.
+- Add context-menu button/anchor APIs, keyboard activation and captured object identities.
+- Present application-owned exclusive choices as radio menu items.
+- Add English/Spanish menu labels and shared coarse-pointer target sizes.
+- Balance input ownership during menu dismissal and teardown; test working toolbar/touch parity.
+
 ## Unreleased — Phase 4
 
 - Add optional same-origin detached browser views with cloned snapshots and owner-dispatched actions.

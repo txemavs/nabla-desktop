@@ -1,8 +1,11 @@
-export { createCommandRegistry, matchesShortcut } from './core/commands'
+export { createCommandRegistry, matchesShortcut, snapshotCommandContext } from './core/commands'
+export { menuLabels } from './core/menu-labels'
+export type { MenuLabels } from './core/menu-labels'
 export type {
   DesktopCommand,
   CommandRegistry,
   CommandContext,
+  CommandTarget,
   MenuItem,
   DesktopMenu,
 } from './core/commands'

@@ -1,5 +1,11 @@
+export interface CommandTarget {
+  type: string
+  id: string
+}
 export interface CommandContext {
   scope?: string
+  target?: Readonly<CommandTarget>
+  selection?: readonly Readonly<CommandTarget>[]
 }
 export interface DesktopCommand {
   id: string
@@ -9,9 +15,11 @@ export interface DesktopCommand {
   shortcut?: string
   scope?: string
   allowInInput?: boolean
-  enabled?: () => boolean
-  visible?: () => boolean
-  checked?: () => boolean
+  enabled?: (context: CommandContext) => boolean
+  visible?: (context: CommandContext) => boolean
+  checked?: (context: CommandContext) => boolean
+  /** Application owns the selected value; menus present this as an exclusive choice. */
+  radioGroup?: string
   execute: (context: CommandContext) => void | Promise<void>
 }
 export type MenuItem =
@@ -20,6 +28,17 @@ export interface DesktopMenu {
   id: string
   label: string
   items: MenuItem[]
+}
+
+/** Capture identities, not scene objects. Predicates revalidate them before execution. */
+export function snapshotCommandContext(context: CommandContext = {}): CommandContext {
+  return Object.freeze({
+    ...context,
+    target: context.target ? Object.freeze({ ...context.target }) : undefined,
+    selection: context.selection
+      ? Object.freeze(context.selection.map(target => Object.freeze({ ...target })))
+      : undefined,
+  })
 }
 
 /** No Vue or Pinia dependency. The application owns callbacks and context. */
@@ -33,8 +52,8 @@ export function createCommandRegistry() {
   }
   const available = (c: DesktopCommand, context: CommandContext) =>
     (!c.scope || c.scope === context.scope) &&
-    (c.visible?.() ?? true) &&
-    (c.enabled?.() ?? true) &&
+    (c.visible?.(context) ?? true) &&
+    (c.enabled?.(context) ?? true) &&
     !busy.has(c.id)
   const registry = {
     register(command: DesktopCommand) {
@@ -53,6 +72,13 @@ export function createCommandRegistry() {
     },
     list() {
       return [...commands.values()]
+    },
+    visible(id: string, context: CommandContext = {}) {
+      const c = commands.get(id)
+      return !!c && (c.visible?.(context) ?? true)
+    },
+    checked(id: string, context: CommandContext = {}) {
+      return commands.get(id)?.checked?.(context)
     },
     available(id: string, context: CommandContext = {}) {
       const c = commands.get(id)

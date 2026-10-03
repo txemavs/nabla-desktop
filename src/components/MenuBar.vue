@@ -2,10 +2,13 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import type { CommandRegistry, CommandContext, DesktopMenu } from '../core/commands'
 import CommandMenu from './CommandMenu.vue'
+import { menuLabels, type MenuLabels } from '../core/menu-labels'
+import { snapshotCommandContext } from '../core/commands'
 const props = defineProps<{
   registry: CommandRegistry
   menus: DesktopMenu[]
   context?: CommandContext
+  labels?: MenuLabels
 }>()
 const emit = defineEmits<{
   'interaction-start': []
@@ -17,9 +20,11 @@ const root = ref<HTMLElement | null>(null),
   list = ref<InstanceType<typeof CommandMenu> | null>(null),
   selected = ref<number | null>(null)
 let release: (() => void) | undefined
+const openedContext = ref<CommandContext>({})
 async function open(index: number, focus = false) {
   const wasOpen = selected.value !== null
   selected.value = index
+  openedContext.value = snapshotCommandContext(props.context)
   if (!wasOpen) {
     release = props.registry.suspendShortcuts()
     emit('interaction-start')
@@ -49,6 +54,9 @@ function outside(event: PointerEvent) {
   const target = event.target as Node
   if (!root.value?.contains(target) && !popup.value?.contains(target)) close(false)
 }
+function reportError(error: unknown) {
+  emit('error', error)
+}
 function key(event: KeyboardEvent, index: number) {
   if (event.key === 'ArrowDown') {
     event.preventDefault()
@@ -69,14 +77,15 @@ function key(event: KeyboardEvent, index: number) {
 onMounted(() => document.addEventListener('pointerdown', outside))
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', outside)
-  release?.()
+  close(false)
 })
 </script>
 <template>
-  <nav ref="root" class="desktop-menu-bar" aria-label="Application menu">
+  <nav ref="root" class="desktop-menu-bar" :aria-label="(labels ?? menuLabels.en).applicationMenu">
     <button
       v-for="(menu, index) in menus"
       :key="menu.id"
+      type="button"
       :aria-expanded="selected === index"
       aria-haspopup="menu"
       @click="selected === index ? close() : open(index, true)"
@@ -96,7 +105,8 @@ onBeforeUnmount(() => {
       ref="list"
       :registry="registry"
       :items="menus[selected].items"
-      :context="context"
+      :context="openedContext"
+      :report-error="reportError"
       @close="close()"
       @error="emit('error', $event)"
     />

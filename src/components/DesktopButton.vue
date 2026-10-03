@@ -45,4 +45,10 @@ withDefaults(
   opacity: 0.4;
   cursor: default;
 }
+@media (any-pointer: coarse) {
+  .nd-button {
+    min-height: var(--nd-touch-target, 44px);
+    min-width: var(--nd-touch-target, 44px);
+  }
+}
 </style>
