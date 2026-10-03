@@ -25,12 +25,13 @@ async function run(id: string) {
   <div class="desktop-command-toolbar" role="group" :aria-label="label" :data-revision="revision">
     <template v-for="id in commands" :key="id"
       ><button
-        v-if="registry.get(id) && (registry.get(id)?.visible?.() ?? true)"
+        v-if="registry.visible(id, context)"
+        type="button"
         :disabled="!registry.available(id, context)"
         :data-command="id"
         :title="registry.get(id)?.label"
         :aria-label="registry.get(id)?.label"
-        :aria-pressed="registry.get(id)?.checked?.()"
+        :aria-pressed="registry.checked(id, context)"
         @click="run(id)"
       >
         <CommandIcon v-if="registry.get(id)?.icon" :name="registry.get(id)!.icon!" /><span

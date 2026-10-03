@@ -2,15 +2,18 @@
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import CommandIcon from './CommandIcon.vue'
 import type { CommandRegistry } from '../core'
-const props = defineProps<{
-  open: boolean
-  title: string
-  icon?: string
-  registry?: CommandRegistry
-  closeLabel?: string
-  modal?: boolean
-  draggable?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    title: string
+    icon?: string
+    registry?: CommandRegistry
+    closeLabel?: string
+    modal?: boolean
+    draggable?: boolean
+  }>(),
+  { modal: true },
+)
 const emit = defineEmits<{
   'update:open': [open: boolean]
   'interaction-start': []

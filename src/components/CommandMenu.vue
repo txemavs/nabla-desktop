@@ -6,6 +6,8 @@ const props = defineProps<{
   registry: CommandRegistry
   items: MenuItem[]
   context?: CommandContext
+  /** A stable parent callback keeps async failures observable after the popup closes. */
+  reportError?: (error: unknown) => void
 }>()
 const emit = defineEmits<{ close: [all?: boolean]; error: [error: unknown] }>()
 const revision = ref(0),
@@ -18,7 +20,7 @@ const items = computed(() => {
   return props.items.filter(
     (i) =>
       !('command' in i) ||
-      (props.registry.get(i.command)?.visible?.() ?? !!props.registry.get(i.command)),
+      props.registry.visible(i.command, props.context),
   )
 })
 function command(id: string) {
@@ -29,13 +31,23 @@ function enabled(id: string) {
   void revision.value
   return props.registry.available(id, props.context)
 }
+function checked(id: string) {
+  void revision.value
+  return props.registry.checked(id, props.context)
+}
+function menuRole(id: string) {
+  const item = command(id)
+  if (item?.radioGroup) return 'menuitemradio'
+  return item?.checked ? 'menuitemcheckbox' : 'menuitem'
+}
 async function run(id: string) {
+  const reportError = props.reportError ?? ((error: unknown) => emit('error', error))
   try {
     const pending = props.registry.execute(id, props.context)
     emit('close', true)
     await pending
   } catch (error) {
-    emit('error', error)
+    reportError(error)
   }
 }
 function focusFirst() {
@@ -94,15 +106,16 @@ function closeChild(index: number) {
       <hr v-if="'separator' in item" role="separator" />
       <button
         v-else-if="'command' in item"
-        :role="command(item.command)?.checked ? 'menuitemcheckbox' : 'menuitem'"
-        :aria-checked="command(item.command)?.checked?.()"
+        type="button"
+        :role="menuRole(item.command)"
+        :aria-checked="checked(item.command)"
         :disabled="!enabled(item.command)"
         :aria-label="command(item.command)?.label"
         :data-command="item.command"
         @click="run(item.command)"
       >
         <span class="desktop-check"
-          ><template v-if="command(item.command)?.checked?.()">✓</template
+          ><template v-if="checked(item.command)">✓</template
           ><CommandIcon
             v-else-if="command(item.command)?.icon"
             :name="command(item.command)!.icon!" /></span
@@ -111,6 +124,7 @@ function closeChild(index: number) {
       </button>
       <template v-else
         ><button
+          type="button"
           role="menuitem"
           aria-haspopup="menu"
           :aria-expanded="opened === index"
@@ -124,6 +138,7 @@ function closeChild(index: number) {
             :registry="registry"
             :context="context"
             :items="item.children"
+            :report-error="reportError"
             @close="$event ? emit('close', true) : closeChild(index)"
             @error="emit('error', $event)"
           /></div
