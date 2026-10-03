@@ -89,10 +89,21 @@ function reportError(error: unknown) {
   emit('error', error)
 }
 
+function dismiss(event: KeyboardEvent) {
+  if (!visible.value || event.defaultPrevented || event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  close()
+}
+
 defineExpose({ openAt, openForAnchor, close })
-onMounted(() => document.addEventListener('pointerdown', outside))
+onMounted(() => {
+  document.addEventListener('pointerdown', outside)
+  document.addEventListener('keydown', dismiss)
+})
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', outside)
+  document.removeEventListener('keydown', dismiss)
   close(false)
 })
 </script>

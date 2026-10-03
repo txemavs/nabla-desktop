@@ -74,7 +74,10 @@ try {
   await page.getByRole('button', { name: 'All actions', exact: true }).click()
   await page.locator('#remove').evaluate(button => button.click())
   assert.equal(await page.getByRole('menuitem', { name: 'Inspect', exact: true }).isDisabled(), true)
+  // Browsers can remove focus when its menu item becomes disabled.
+  await page.evaluate(() => document.activeElement?.blur())
   await page.keyboard.press('Escape')
+  await popup.waitFor({ state: 'hidden' })
   await page.getByRole('button', { name: 'All actions', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Fail', exact: true }).click()
   await page.waitForFunction(() => document.querySelector('#errors').textContent === '1')

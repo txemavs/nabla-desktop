@@ -57,6 +57,12 @@ function outside(event: PointerEvent) {
 function reportError(error: unknown) {
   emit('error', error)
 }
+function dismiss(event: KeyboardEvent) {
+  if (selected.value === null || event.defaultPrevented || event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopPropagation()
+  close()
+}
 function key(event: KeyboardEvent, index: number) {
   if (event.key === 'ArrowDown') {
     event.preventDefault()
@@ -74,9 +80,13 @@ function key(event: KeyboardEvent, index: number) {
     close()
   }
 }
-onMounted(() => document.addEventListener('pointerdown', outside))
+onMounted(() => {
+  document.addEventListener('pointerdown', outside)
+  document.addEventListener('keydown', dismiss)
+})
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', outside)
+  document.removeEventListener('keydown', dismiss)
   close(false)
 })
 </script>
