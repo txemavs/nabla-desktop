@@ -7,6 +7,7 @@
 - Present application-owned exclusive choices as radio menu items.
 - Add English/Spanish menu labels and shared coarse-pointer target sizes.
 - Balance input ownership during menu dismissal and teardown; test working toolbar/touch parity.
+- Restore modal-by-default dialogs so confirmation buttons receive input above workspace content.
 
 ## Unreleased — Phase 4
 

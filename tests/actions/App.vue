@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import {
-  ContextMenu, CommandToolbar, DesktopButton, MenuBar, createCommandRegistry, menuLabels,
+  ContextMenu, CommandToolbar, DesktopButton, DesktopDialog, MenuBar,
+  createCommandRegistry, menuLabels,
 } from '@nabla/desktop'
 import '@nabla/desktop/style.css'
 const registry = createCommandRegistry()
@@ -14,6 +15,8 @@ const spanish = ref(false)
 const output = ref('')
 const ownership = ref(0)
 const failures = ref(0)
+const confirmation = ref(false)
+const utility = ref(false)
 const actions = ref<InstanceType<typeof ContextMenu>>()
 const context = computed(() => ({ target: { type: 'item', id: target.value } }))
 const labels = computed(() => spanish.value ? menuLabels.es : menuLabels.en)
@@ -80,6 +83,16 @@ onBeforeUnmount(() => detach?.())
   <DesktopButton id="spanish" @click="spanish = true">Español</DesktopButton>
   <button id="edge" @click="openAtEdge">Edge</button>
   <button id="cancel-open" @click="cancelOpening">Cancel opening</button>
+  <button @click="confirmation = true">Open confirmation</button>
+  <button @click="utility = true">Open utility</button>
+  <DesktopDialog :open="confirmation" title="Confirmation" :registry="registry"
+    @update:open="confirmation = $event">
+    <DesktopButton @click="confirmation = false">Confirm</DesktopButton>
+  </DesktopDialog>
+  <DesktopDialog :open="utility" title="Utility" :modal="false"
+    @update:open="utility = $event">
+    <p>Nonmodal utility content</p>
+  </DesktopDialog>
   <output id="result">{{ output }}</output>
   <output id="ownership">{{ ownership }}</output>
   <output id="errors">{{ failures }}</output>
