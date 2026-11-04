@@ -153,3 +153,7 @@ MIT licensed. No Agency schemas, authentication, routing or engine dependencies.
 Run `npm run dev:demo` to try connected window controls, a properties-driven canvas,
 retained notes and disposable windows. `npm run build:demo` produces `demo-dist/`
 for static hosting. See [the demo guide](docs/demo.md) for interactions and scope.
+
+## Contributing
+
+> **IMPORTANT: Rule zero.** Look first and reuse: before building any new system, helper, path or format, search this repo and the other Nabla repos and reuse or extend what exists. No parallel systems, no stopgap fixes; fix the root cause in the shared generic path. See [AGENTS.md](AGENTS.md).
